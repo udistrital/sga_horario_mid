@@ -1,0 +1,28 @@
+swagger: "2.0"
+info:
+  title: beego Test API
+  description: beego has a very cool tools to autogenerate documents for your API
+  version: 1.0.0
+  termsOfService: http://beego.me/
+  contact:
+    email: astaxie@gmail.com
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+basePath: /v1
+paths:
+  /grupo-estudio/getAll:
+    get:
+      tags:
+      - grupo-estudio
+      description: get events
+      operationId: GrupoEstudioController.getGrupoEstudio
+      responses:
+        "200":
+          description: '{}'
+        "403":
+          description: body is empty
+tags:
+- name: grupo-estudio
+  description: |
+    Operations about GruposEstudio
