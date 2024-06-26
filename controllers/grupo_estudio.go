@@ -7,12 +7,12 @@ import (
 )
 
 // Operations about GruposEstudio
-type GrupoEstudio struct {
+type GrupoEstudioController struct {
 	beego.Controller
 }
 
 // URLMapping ...
-func (c *GrupoEstudio) URLMapping() {
+func (c *GrupoEstudioController) URLMapping() {
 	c.Mapping("GetGruposEstudio", c.GetGruposEstudio)
 }
 
@@ -20,8 +20,9 @@ func (c *GrupoEstudio) URLMapping() {
 // @Description get events
 // @Success 200 {}
 // @Failure 403 body is empty
-// @router / [get]
-func (c *GrupoEstudio) GetHorarios() {
+// @router /getAll [get]
+func (c *GrupoEstudioController) GetGruposEstudio() {
+
 	defer errorhandler.HandlePanic(&c.Controller)
 
 	respuesta := services.GetGruposEstudio()

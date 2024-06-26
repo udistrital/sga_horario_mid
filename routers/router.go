@@ -8,21 +8,19 @@
 package routers
 
 import (
-	"sga_horario_mid/controllers"
-
+	"github.com/udistrital/sga_horario_mid/controllers"
+"github.com/udistrital/utils_oas/errorhandler"
 	"github.com/astaxie/beego"
 )
 
 func init() {
+	beego.ErrorController(&errorhandler.ErrorHandlerController{})
+
 	ns := beego.NewNamespace("/v1",
-		beego.NSNamespace("/object",
+
+		beego.NSNamespace("/grupo-estudio",
 			beego.NSInclude(
-				&controllers.ObjectController{},
-			),
-		),
-		beego.NSNamespace("/user",
-			beego.NSInclude(
-				&controllers.UserController{},
+				&controllers.GrupoEstudioController{},
 			),
 		),
 	)
