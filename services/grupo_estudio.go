@@ -3,6 +3,8 @@ package services
 import (
 	// "fmt"
 
+	"fmt"
+
 	"github.com/astaxie/beego"
 	"github.com/udistrital/sga_horario_mid/helpers"
 	"github.com/udistrital/utils_oas/request"
@@ -20,16 +22,18 @@ func GetGruposEstudio(proyectoAcademicoId, planEstudiosId, semestreId string) re
 
 	for _, grupoData := range gruposEstudioResp["Data"].([]interface{}) {
 		grupo := grupoData.(map[string]interface{})
-		espaciosCompletos := make([]map[string]interface{}, 0)
+		espacios := make([]map[string]interface{}, 0)
 
 		for _, espacioId := range grupo["EspaciosAcademicos"].([]interface{}) {
 			if espacio, errEspacio := helpers.ObtenerEspacioAcademicoSegunId(espacioId.(string)); errEspacio != nil || espacio["Success"] == false {
 				return requestresponse.APIResponseDTO(false, 404, nil, "Error al obtener espacio académico")
 			} else if espacioData := espacio["Data"].([]interface{}); len(espacioData) > 0 {
-				espaciosCompletos = append(espaciosCompletos, espacioData[0].(map[string]interface{}))
+				espacios = append(espacios, espacioData[0].(map[string]interface{}))
 			}
 		}
-		grupo["EspaciosAcademicosCompletos"] = espaciosCompletos
+		grupo["EspaciosAcademicos"] = espacios
+		grupo["Nombre"] = fmt.Sprintf("%s%s", grupo["CodigoProyecto"], grupo["IndicadorGrupo"])
+
 	}
 	return requestresponse.APIResponseDTO(true, 200, gruposEstudioResp["Data"], nil)
 }
