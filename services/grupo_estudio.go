@@ -32,8 +32,7 @@ func GetGruposEstudio(proyectoAcademicoId, planEstudiosId, semestreId string) re
 			}
 		}
 		grupo["EspaciosAcademicos"] = espacios
-		grupo["Nombre"] = fmt.Sprintf("%s%s", grupo["CodigoProyecto"], grupo["IndicadorGrupo"])
-
+		grupo["Nombre"] = fmt.Sprintf("%s %s", grupo["CodigoProyecto"], grupo["IndicadorGrupo"])
 	}
 	return requestresponse.APIResponseDTO(true, 200, gruposEstudioResp["Data"], nil)
 }
