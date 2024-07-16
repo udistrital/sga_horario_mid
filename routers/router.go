@@ -8,9 +8,9 @@
 package routers
 
 import (
-	"github.com/udistrital/sga_horario_mid/controllers"
-"github.com/udistrital/utils_oas/errorhandler"
 	"github.com/astaxie/beego"
+	"github.com/udistrital/sga_horario_mid/controllers"
+	"github.com/udistrital/utils_oas/errorhandler"
 )
 
 func init() {
@@ -21,6 +21,11 @@ func init() {
 		beego.NSNamespace("/grupo-estudio",
 			beego.NSInclude(
 				&controllers.GrupoEstudioController{},
+			),
+		),
+		beego.NSNamespace("/docente",
+			beego.NSInclude(
+				&controllers.DocenteController{},
 			),
 		),
 	)
