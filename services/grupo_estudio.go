@@ -25,10 +25,10 @@ func GetGruposEstudio(proyectoAcademicoId, planEstudiosId, semestreId string) re
 		espacios := make([]map[string]interface{}, 0)
 
 		for _, espacioId := range grupo["EspaciosAcademicos"].([]interface{}) {
-			if espacio, errEspacio := helpers.ObtenerEspacioAcademicoSegunId(espacioId.(string)); errEspacio != nil || espacio["Success"] == false {
+			if espacio, errEspacio := helpers.ObtenerEspacioAcademicoSegunId(espacioId.(string)); errEspacio == nil {
+				espacios = append(espacios, espacio)
+			} else {
 				return requestresponse.APIResponseDTO(false, 404, nil, "Error al obtener espacio académico")
-			} else if espacioData := espacio["Data"].([]interface{}); len(espacioData) > 0 {
-				espacios = append(espacios, espacioData[0].(map[string]interface{}))
 			}
 		}
 		grupo["EspaciosAcademicos"] = espacios

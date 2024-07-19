@@ -18,14 +18,19 @@ func init() {
 
 	ns := beego.NewNamespace("/v1",
 
-		beego.NSNamespace("/grupo-estudio",
+		beego.NSNamespace("/colocacion-espacio-academico",
 			beego.NSInclude(
-				&controllers.GrupoEstudioController{},
+				&controllers.ColocacionEspacioAcademicoController{},
 			),
 		),
 		beego.NSNamespace("/docente",
 			beego.NSInclude(
 				&controllers.DocenteController{},
+			),
+		),
+		beego.NSNamespace("/grupo-estudio",
+			beego.NSInclude(
+				&controllers.GrupoEstudioController{},
 			),
 		),
 	)

@@ -7,6 +7,15 @@ import (
 
 func init() {
 
+    beego.GlobalControllerRouter["github.com/udistrital/sga_horario_mid/controllers:ColocacionEspacioAcademicoController"] = append(beego.GlobalControllerRouter["github.com/udistrital/sga_horario_mid/controllers:ColocacionEspacioAcademicoController"],
+        beego.ControllerComments{
+            Method: "GetColocacionesSegunHorarioSemestre",
+            Router: "/",
+            AllowHTTPMethods: []string{"get"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
     beego.GlobalControllerRouter["github.com/udistrital/sga_horario_mid/controllers:DocenteController"] = append(beego.GlobalControllerRouter["github.com/udistrital/sga_horario_mid/controllers:DocenteController"],
         beego.ControllerComments{
             Method: "GetDocente",
