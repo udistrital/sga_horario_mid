@@ -27,7 +27,7 @@ func init() {
 
     beego.GlobalControllerRouter["github.com/udistrital/sga_horario_mid/controllers:GrupoEstudioController"] = append(beego.GlobalControllerRouter["github.com/udistrital/sga_horario_mid/controllers:GrupoEstudioController"],
         beego.ControllerComments{
-            Method: "GetGruposEstudio",
+            Method: "GetGruposEstudioSegunHorarioSemestre",
             Router: "/",
             AllowHTTPMethods: []string{"get"},
             MethodParams: param.Make(),

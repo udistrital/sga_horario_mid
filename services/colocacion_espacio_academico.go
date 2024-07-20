@@ -10,7 +10,7 @@ import (
 // Obtiene colocaciones según el horario de semestre
 func GetColocacionesSegunHorarioSemestre(horarioSemestreId string) requestresponse.APIResponse {
 	// Trae las colocaciones de espacio segun el id del semestre horario
-	urlColocacion := beego.AppConfig.String("HorariosService") + "colocacion-espacio-academico?query=HorarioSemestreId:" + horarioSemestreId + ",Activo:true&limit=0"
+	urlColocacion := beego.AppConfig.String("HorarioService") + "colocacion-espacio-academico?query=HorarioSemestreId:" + horarioSemestreId + ",Activo:true&limit=0"
 	var resColocaciones map[string]interface{}
 	if err := request.GetJson(urlColocacion, &resColocaciones); err != nil {
 		return requestresponse.APIResponseDTO(false, 500, nil, "Error en el servicio de terceros")
