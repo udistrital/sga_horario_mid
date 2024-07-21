@@ -11,9 +11,9 @@ import (
 	"github.com/udistrital/utils_oas/requestresponse"
 )
 
-func GetGruposEstudio(proyectoAcademicoId, planEstudiosId, semestreId string) requestresponse.APIResponse {
-	url := beego.AppConfig.String("HorariosService") + "grupo-estudio"
-	query := "Activo:true,ProyectoAcademicoId:" + proyectoAcademicoId + ",PlanEstudiosId:" + planEstudiosId + ",SemestreId:" + semestreId + "&limit:0"
+func GetGruposEstudioSegunHorarioSemestre(horarioSemestreId string) requestresponse.APIResponse {
+	url := beego.AppConfig.String("HorarioService") + "grupo-estudio"
+	query := "HorarioSemestreId:" + horarioSemestreId + ",Activo:true&limit:0"
 
 	var gruposEstudioResp map[string]interface{}
 	if err := request.GetJson(url+"?query="+query, &gruposEstudioResp); err != nil || gruposEstudioResp["Success"] == false {
@@ -25,10 +25,10 @@ func GetGruposEstudio(proyectoAcademicoId, planEstudiosId, semestreId string) re
 		espacios := make([]map[string]interface{}, 0)
 
 		for _, espacioId := range grupo["EspaciosAcademicos"].([]interface{}) {
-			if espacio, errEspacio := helpers.ObtenerEspacioAcademicoSegunId(espacioId.(string)); errEspacio != nil || espacio["Success"] == false {
+			if espacio, errEspacio := helpers.ObtenerEspacioAcademicoSegunId(espacioId.(string)); errEspacio == nil {
+				espacios = append(espacios, espacio)
+			} else {
 				return requestresponse.APIResponseDTO(false, 404, nil, "Error al obtener espacio académico")
-			} else if espacioData := espacio["Data"].([]interface{}); len(espacioData) > 0 {
-				espacios = append(espacios, espacioData[0].(map[string]interface{}))
 			}
 		}
 		grupo["EspaciosAcademicos"] = espacios

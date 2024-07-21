@@ -13,25 +13,21 @@ type GrupoEstudioController struct {
 
 // URLMapping ...
 func (c *GrupoEstudioController) URLMapping() {
-	c.Mapping("GetGruposEstudio", c.GetGruposEstudio)
+	c.Mapping("GetGruposEstudioSegunHorarioSemestre", c.GetGruposEstudioSegunHorarioSemestre)
 }
 
-// @Title getGrupoEstudio
-// @Description get grupos de estudio
-// @Param	proyecto-academico	query	string	false	"Se recibe parametro: id del proyecto academico"
-// @Param	plan-estudios		query	string	false	"Se recibe parametro: id del plan de estudios"
-// @Param	semestre			query	string	false	"Se recibe parametro: id del semestre"
+// @Title getGrupoEstudioSegunHorarioSemestre
+// @Description get grupos de estudio segun horario semestre
+// @Param	horario-semestre-id	query	string	true	"Se recibe parametro: id del horario semestre"
 // @Success 200 {}
 // @Failure 403 body is empty
 // @router / [get]
-func (c *GrupoEstudioController) GetGruposEstudio() {
+func (c *GrupoEstudioController) GetGruposEstudioSegunHorarioSemestre() {
 	defer errorhandler.HandlePanic(&c.Controller)
 
-	proyectoAcademicoId := c.GetString("proyecto-academico")
-	planEstudiosId := c.GetString("plan-estudios")
-	semestreId := c.GetString("semestre")
+	horarioSemestreId := c.GetString("horario-semestre-id")
 
-	respuesta := services.GetGruposEstudio(proyectoAcademicoId, planEstudiosId, semestreId)
+	respuesta := services.GetGruposEstudioSegunHorarioSemestre(horarioSemestreId)
 
 	c.Ctx.Output.SetStatus(respuesta.Status)
 
