@@ -10,6 +10,176 @@ import (
 	"github.com/udistrital/utils_oas/request"
 )
 
+func GetColocacionesDeModuloHorario(grupoEstudioId string) ([]map[string]interface{}, error) {
+	urlColocacion := beego.AppConfig.String("HorarioService") + "colocacion-espacio-academico?query=GrupoEstudioId:" + grupoEstudioId + ",Activo:true&limit=0"
+	var resColocaciones map[string]interface{}
+	if err := request.GetJson(urlColocacion, &resColocaciones); err != nil {
+		return nil, fmt.Errorf("error en el servicio de terceros: %w", err)
+	}
+
+	data, ok := resColocaciones["Data"].([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("formato de datos inesperado")
+	}
+
+	colocaciones := make([]map[string]interface{}, len(data))
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+	errCh := make(chan error, len(data))
+
+	for i, colocacion := range data {
+		wg.Add(1)
+		go func(i int, colocacion interface{}) {
+			defer wg.Done()
+			colocacionMap, ok := colocacion.(map[string]interface{})
+			if !ok {
+				errCh <- fmt.Errorf("error al convertir colocacion a mapa")
+				return
+			}
+
+			// Agrega objeto completo para sede, edificio y salón
+			if err := GetSedeEdificioSalon(colocacionMap); err != nil {
+				errCh <- fmt.Errorf("error al obtener sede, edificio y salón: %w", err)
+				return
+			}
+
+			// Agrega objeto completo de espacio académico
+			if id, ok := colocacionMap["EspacioAcademicoId"].(string); ok {
+				if espacioAcademico, err := ObtenerEspacioAcademicoSegunId(id); err == nil {
+					colocacionMap["EspacioAcademico"] = espacioAcademico
+				} else {
+					errCh <- fmt.Errorf("error al obtener espacio académico: %w", err)
+					return
+				}
+			}
+
+			mu.Lock()
+			colocaciones[i] = colocacionMap
+			mu.Unlock()
+		}(i, colocacion)
+	}
+
+	wg.Wait()
+	close(errCh)
+
+	if len(errCh) > 0 {
+		return nil, <-errCh
+	}
+
+	return colocaciones, nil
+}
+
+func GetColocacionesDeModuloPlanDocente(grupoEstudioId, periodoId string) ([]map[string]interface{}, error) {
+	urlPlanDocente := beego.AppConfig.String("PlanTrabajoDocenteService") + "plan_docente?query=periodo_id:" + periodoId + ",activo:true&limit=0"
+	var planesDocente map[string]interface{}
+	if err := request.GetJson(urlPlanDocente, &planesDocente); err != nil {
+		return nil, fmt.Errorf("error en el servicio de plan docente: %w", err)
+	}
+
+	urlColocacion := beego.AppConfig.String("HorarioService") + "grupo-estudio/" + grupoEstudioId
+	var resColocaciones map[string]interface{}
+	if err := request.GetJson(urlColocacion, &resColocaciones); err != nil {
+		return nil, fmt.Errorf("error en el servicio de horario: %w", err)
+	}
+
+	espaciosAcademicos, ok := resColocaciones["Data"].(map[string]interface{})["EspaciosAcademicos"].([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("error al procesar EspaciosAcademicos")
+	}
+
+	var colocaciones []map[string]interface{}
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+	errCh := make(chan error, len(planesDocente["Data"].([]interface{})))
+
+	for _, planDocente := range planesDocente["Data"].([]interface{}) {
+		planDocenteMap, ok := planDocente.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		wg.Add(1)
+		go func(planDocenteMap map[string]interface{}) {
+			defer wg.Done()
+			urlCargaPlan := beego.AppConfig.String("PlanTrabajoDocenteService") + "carga_plan?query=plan_docente_id:" + planDocenteMap["_id"].(string) + ",activo:true&limit=0"
+			var cargaPlanes map[string]interface{}
+			if err := request.GetJson(urlCargaPlan, &cargaPlanes); err != nil {
+				errCh <- fmt.Errorf("error en el servicio de plan docente: %w", err)
+				return
+			}
+
+			for _, cargaPlan := range cargaPlanes["Data"].([]interface{}) {
+				cargaPlanMap, ok := cargaPlan.(map[string]interface{})
+				if !ok || cargaPlanMap["colocacion_espacio_academico_id"] == nil {
+					continue
+				}
+
+				urlColocacion := beego.AppConfig.String("HorarioService") + "colocacion-espacio-academico/" + cargaPlanMap["colocacion_espacio_academico_id"].(string)
+				var colocacion map[string]interface{}
+				if err := request.GetJson(urlColocacion, &colocacion); err != nil {
+					errCh <- fmt.Errorf("error en el servicio horario: %w", err)
+					return
+				}
+
+				colocacionData, ok := colocacion["Data"].(map[string]interface{})
+				if !ok {
+					continue
+				}
+
+				if colocacionData["Activo"] == false {
+					continue
+				}
+
+				espacioAcademicoId, exists := colocacionData["EspacioAcademicoId"]
+				if !exists {
+					continue
+				}
+
+				if !Contains(espaciosAcademicos, espacioAcademicoId.(string)) {
+					continue
+				}
+
+				if err := GetSedeEdificioSalon(colocacionData); err != nil {
+					errCh <- fmt.Errorf("error al obtener sede, edificio y salón: %w", err)
+					return
+				}
+
+				if id, ok := colocacionData["EspacioAcademicoId"].(string); ok {
+					if espacioAcademico, err := ObtenerEspacioAcademicoSegunId(id); err == nil {
+						colocacionData["EspacioAcademico"] = espacioAcademico
+					} else {
+						errCh <- fmt.Errorf("error al obtener espacio académico: %w", err)
+						return
+					}
+				}
+
+				urlDocente := beego.AppConfig.String("TercerosService") + "tercero/" + planDocenteMap["docente_id"].(string)
+				var docente map[string]interface{}
+				if err := request.GetJson(urlDocente, &docente); err != nil {
+					errCh <- fmt.Errorf("error en el servicio terceros: %w", err)
+					return
+				}
+
+				colocacionData["CargaPlanId"] = cargaPlanMap["_id"]
+				colocacionData["Docente"] = docente
+
+				mu.Lock()
+				colocaciones = append(colocaciones, colocacionData)
+				mu.Unlock()
+			}
+		}(planDocenteMap)
+	}
+
+	wg.Wait()
+	close(errCh)
+
+	if len(errCh) > 0 {
+		return nil, <-errCh
+	}
+
+	return colocaciones, nil
+}
+
 // Con el objeto de colocación trae los datos completos de sede, edificio y salón
 func GetSedeEdificioSalon(colocacion map[string]interface{}) error {
 	var wg sync.WaitGroup
@@ -48,4 +218,13 @@ func GetSedeEdificioSalon(colocacion map[string]interface{}) error {
 	colocacion["ResumenColocacionEspacioFisico"] = resumenMap
 
 	return err
+}
+
+func Contains(slice []interface{}, item string) bool {
+	for _, v := range slice {
+		if str, ok := v.(string); ok && str == item {
+			return true
+		}
+	}
+	return false
 }

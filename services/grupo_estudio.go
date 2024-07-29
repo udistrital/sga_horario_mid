@@ -11,9 +11,9 @@ import (
 	"github.com/udistrital/utils_oas/requestresponse"
 )
 
-func GetGruposEstudioSegunHorarioSemestre(horarioSemestreId string) requestresponse.APIResponse {
+func GetGruposEstudioSegunHorarioYSemestre(horarioId, semestreId string) requestresponse.APIResponse {
 	url := beego.AppConfig.String("HorarioService") + "grupo-estudio"
-	query := "HorarioSemestreId:" + horarioSemestreId + ",Activo:true&limit:0"
+	query := "HorarioId:" + horarioId + ",SemestreId:" + semestreId + ",Activo:true&limit:0"
 
 	var gruposEstudioResp map[string]interface{}
 	if err := request.GetJson(url+"?query="+query, &gruposEstudioResp); err != nil || gruposEstudioResp["Success"] == false {

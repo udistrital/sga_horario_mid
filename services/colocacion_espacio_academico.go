@@ -1,39 +1,53 @@
 package services
 
 import (
-	"github.com/astaxie/beego"
+	"sync"
+
 	"github.com/udistrital/sga_horario_mid/helpers"
-	"github.com/udistrital/utils_oas/request"
 	"github.com/udistrital/utils_oas/requestresponse"
 )
 
-// Obtiene colocaciones según el horario de semestre
-func GetColocacionesSegunHorarioSemestre(horarioSemestreId string) requestresponse.APIResponse {
-	// Trae las colocaciones de espacio segun el id del semestre horario
-	urlColocacion := beego.AppConfig.String("HorarioService") + "colocacion-espacio-academico?query=HorarioSemestreId:" + horarioSemestreId + ",Activo:true&limit=0"
-	var resColocaciones map[string]interface{}
-	if err := request.GetJson(urlColocacion, &resColocaciones); err != nil {
-		return requestresponse.APIResponseDTO(false, 500, nil, "Error en el servicio de terceros")
+func GetColocacionesSegunGrupoEstudioYPeriodo(grupoEstudioId, periodoId string) requestresponse.APIResponse {
+	var colocacionesDeModuloPlanDocente []map[string]interface{}
+	var colocacionesDeModuloHorario []map[string]interface{}
+	var errPlanDocente, errHorario error
+
+	var wg sync.WaitGroup
+	wg.Add(2)
+
+	go func() {
+		defer wg.Done()
+		colocacionesDeModuloPlanDocente, errPlanDocente = helpers.GetColocacionesDeModuloPlanDocente(grupoEstudioId, periodoId)
+	}()
+
+	go func() {
+		defer wg.Done()
+		colocacionesDeModuloHorario, errHorario = helpers.GetColocacionesDeModuloHorario(grupoEstudioId)
+	}()
+
+	wg.Wait()
+
+	if errPlanDocente != nil {
+		return requestresponse.APIResponseDTO(false, 500, nil, errPlanDocente.Error())
 	}
 
-	data := resColocaciones["Data"].([]interface{})
-
-	for i, colocacion := range data {
-		colocacionMap := colocacion.(map[string]interface{})
-		//agrega objeto completo para sede edificio y salon
-		if err := helpers.GetSedeEdificioSalon(colocacionMap); err != nil {
-			return requestresponse.APIResponseDTO(false, 500, nil, err.Error())
-		}
-
-		//agrega objeto completo de espacio academico
-		if id, ok := colocacionMap["EspacioAcademicoId"].(string); ok {
-			if espacioAcademico, err := helpers.ObtenerEspacioAcademicoSegunId(id); err == nil {
-				colocacionMap["EspacioAcademico"] = espacioAcademico
-			}
-		}
-
-		data[i] = colocacionMap
+	if errHorario != nil {
+		return requestresponse.APIResponseDTO(false, 500, nil, errHorario.Error())
 	}
 
-	return requestresponse.APIResponseDTO(true, 200, data, "")
+	colocacionesMap := make(map[string]map[string]interface{})
+
+	for _, colocacion := range append(colocacionesDeModuloPlanDocente, colocacionesDeModuloHorario...) {
+		id, ok := colocacion["_id"].(string)
+		if ok && colocacion != nil && colocacionesMap[id] == nil {
+			colocacionesMap[id] = colocacion
+		}
+	}
+
+	colocaciones := make([]map[string]interface{}, 0, len(colocacionesMap))
+	for _, colocacion := range colocacionesMap {
+		colocaciones = append(colocaciones, colocacion)
+	}
+
+	return requestresponse.APIResponseDTO(true, 200, colocaciones, "")
 }
