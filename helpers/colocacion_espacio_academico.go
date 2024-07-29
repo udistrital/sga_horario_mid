@@ -70,24 +70,28 @@ func GetColocacionesDeModuloHorario(grupoEstudioId string) ([]map[string]interfa
 }
 
 func GetColocacionesDeModuloPlanDocente(grupoEstudioId, periodoId string) ([]map[string]interface{}, error) {
+	//Obtengo los planes docente que pertenecen al periodo dado
 	urlPlanDocente := beego.AppConfig.String("PlanTrabajoDocenteService") + "plan_docente?query=periodo_id:" + periodoId + ",activo:true&limit=0"
 	var planesDocente map[string]interface{}
 	if err := request.GetJson(urlPlanDocente, &planesDocente); err != nil {
 		return nil, fmt.Errorf("error en el servicio de plan docente: %w", err)
 	}
 
+	//Obtengo el grupo de estudio segun el id
 	urlColocacion := beego.AppConfig.String("HorarioService") + "grupo-estudio/" + grupoEstudioId
 	var resColocaciones map[string]interface{}
 	if err := request.GetJson(urlColocacion, &resColocaciones); err != nil {
 		return nil, fmt.Errorf("error en el servicio de horario: %w", err)
 	}
 
+	//Se extrae los espacios academicos del grupo de estudio
 	espaciosAcademicos, ok := resColocaciones["Data"].(map[string]interface{})["EspaciosAcademicos"].([]interface{})
 	if !ok {
 		return nil, fmt.Errorf("error al procesar EspaciosAcademicos")
 	}
 
 	var colocaciones []map[string]interface{}
+	//go routines
 	var wg sync.WaitGroup
 	var mu sync.Mutex
 	errCh := make(chan error, len(planesDocente["Data"].([]interface{})))
@@ -101,6 +105,7 @@ func GetColocacionesDeModuloPlanDocente(grupoEstudioId, periodoId string) ([]map
 		wg.Add(1)
 		go func(planDocenteMap map[string]interface{}) {
 			defer wg.Done()
+			//accedo a las cargas plan del plan docente
 			urlCargaPlan := beego.AppConfig.String("PlanTrabajoDocenteService") + "carga_plan?query=plan_docente_id:" + planDocenteMap["_id"].(string) + ",activo:true&limit=0"
 			var cargaPlanes map[string]interface{}
 			if err := request.GetJson(urlCargaPlan, &cargaPlanes); err != nil {
@@ -113,7 +118,7 @@ func GetColocacionesDeModuloPlanDocente(grupoEstudioId, periodoId string) ([]map
 				if !ok || cargaPlanMap["colocacion_espacio_academico_id"] == nil {
 					continue
 				}
-
+				//accedo a la colocacion espacio de la carga plan
 				urlColocacion := beego.AppConfig.String("HorarioService") + "colocacion-espacio-academico/" + cargaPlanMap["colocacion_espacio_academico_id"].(string)
 				var colocacion map[string]interface{}
 				if err := request.GetJson(urlColocacion, &colocacion); err != nil {
@@ -135,10 +140,12 @@ func GetColocacionesDeModuloPlanDocente(grupoEstudioId, periodoId string) ([]map
 					continue
 				}
 
+				// reviso si ese espacio academico esta en el arreglo de espacios academicos del grupo de estudio
 				if !Contains(espaciosAcademicos, espacioAcademicoId.(string)) {
 					continue
 				}
 
+				//si existe, se le colocan los atributos necesarios para responder al cliente
 				if err := GetSedeEdificioSalon(colocacionData); err != nil {
 					errCh <- fmt.Errorf("error al obtener sede, edificio y salón: %w", err)
 					return

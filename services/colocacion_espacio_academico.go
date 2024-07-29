@@ -35,8 +35,10 @@ func GetColocacionesSegunGrupoEstudioYPeriodo(grupoEstudioId, periodoId string) 
 		return requestresponse.APIResponseDTO(false, 500, nil, errHorario.Error())
 	}
 
+	//en este se unen las colocaciones del modulo de plan docente y horario
 	colocacionesMap := make(map[string]map[string]interface{})
 
+	//Si una colocacion se repite se deja una, priorizando la del modulo de plan docente
 	for _, colocacion := range append(colocacionesDeModuloPlanDocente, colocacionesDeModuloHorario...) {
 		id, ok := colocacion["_id"].(string)
 		if ok && colocacion != nil && colocacionesMap[id] == nil {
