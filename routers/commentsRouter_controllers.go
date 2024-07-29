@@ -9,7 +9,7 @@ func init() {
 
     beego.GlobalControllerRouter["github.com/udistrital/sga_horario_mid/controllers:ColocacionEspacioAcademicoController"] = append(beego.GlobalControllerRouter["github.com/udistrital/sga_horario_mid/controllers:ColocacionEspacioAcademicoController"],
         beego.ControllerComments{
-            Method: "GetColocacionesSegunGrupoEstudio",
+            Method: "GetColocacionesSegunGrupoEstudioYPeriodo",
             Router: "/",
             AllowHTTPMethods: []string{"get"},
             MethodParams: param.Make(),
