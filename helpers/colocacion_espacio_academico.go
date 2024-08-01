@@ -71,7 +71,7 @@ func GetColocacionesDeModuloHorario(grupoEstudioId string) ([]map[string]interfa
 
 func GetColocacionesDeModuloPlanDocente(grupoEstudioId, periodoId string) ([]map[string]interface{}, error) {
 	//Obtengo los planes docente que pertenecen al periodo dado
-	urlPlanDocente := beego.AppConfig.String("PlanTrabajoDocenteService") + "plan_docente?query=periodo_id:" + periodoId + ",activo:true&limit=0"
+	urlPlanDocente := beego.AppConfig.String("PlanDocenteService") + "plan_docente?query=periodo_id:" + periodoId + ",activo:true&limit=0"
 	var planesDocente map[string]interface{}
 	if err := request.GetJson(urlPlanDocente, &planesDocente); err != nil {
 		return nil, fmt.Errorf("error en el servicio de plan docente: %w", err)
@@ -106,7 +106,7 @@ func GetColocacionesDeModuloPlanDocente(grupoEstudioId, periodoId string) ([]map
 		go func(planDocenteMap map[string]interface{}) {
 			defer wg.Done()
 			//accedo a las cargas plan del plan docente
-			urlCargaPlan := beego.AppConfig.String("PlanTrabajoDocenteService") + "carga_plan?query=plan_docente_id:" + planDocenteMap["_id"].(string) + ",activo:true&limit=0"
+			urlCargaPlan := beego.AppConfig.String("PlanDocenteService") + "carga_plan?query=plan_docente_id:" + planDocenteMap["_id"].(string) + ",activo:true&limit=0"
 			var cargaPlanes map[string]interface{}
 			if err := request.GetJson(urlCargaPlan, &cargaPlanes); err != nil {
 				errCh <- fmt.Errorf("error en el servicio de plan docente: %w", err)
@@ -145,7 +145,7 @@ func GetColocacionesDeModuloPlanDocente(grupoEstudioId, periodoId string) ([]map
 					continue
 				}
 
-				//si existe, se le colocan los atributos necesarios para responder al cliente
+				//si existe, se le colocan los atributos para responder al cliente
 				if err := GetSedeEdificioSalon(colocacionData); err != nil {
 					errCh <- fmt.Errorf("error al obtener sede, edificio y salón: %w", err)
 					return

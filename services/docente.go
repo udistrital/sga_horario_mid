@@ -23,8 +23,6 @@ func GetDocenteYVinculacionesPorDocumento(documento string) requestresponse.APIR
 
 	docenteId := fmt.Sprintf("%v", resTercero[0]["TerceroId"].(map[string]interface{})["Id"])
 	vinculaciones, err := helpers.GetVinculacionesDeDocente(docenteId)
-	fmt.Println(err)
-	fmt.Println(vinculaciones)
 	if err != nil {
 		return requestresponse.APIResponseDTO(false, 500, nil, err.Error())
 	}
@@ -38,4 +36,18 @@ func GetDocenteYVinculacionesPorDocumento(documento string) requestresponse.APIR
 		"Nombre": strings.Title(strings.ToLower(resTercero[0]["TerceroId"].(map[string]interface{})["NombreCompleto"].(string))),
 	}
 	return requestresponse.APIResponseDTO(true, 200, map[string]interface{}{"Docente": docente, "Vinculaciones": vinculaciones}, "")
+}
+
+func GetPreasignacionesSegunDocenteYPeriodo(docenteId, periodoId string) requestresponse.APIResponse {
+	var prueba map[string]interface{}
+
+	urlPreasignaciones := beego.AppConfig.String("PlanDocenteService") + "pre_asignacion?query=docente_id:" + docenteId + ",periodo_id:" + periodoId + ",activo:true&limit=0"
+	fmt.Println(urlPreasignaciones)
+	var resPreAsignaciones map[string]interface{}
+	if err := request.GetJson(urlPreasignaciones, &resPreAsignaciones); err != nil {
+		return requestresponse.APIResponseDTO(false, 500, nil, "Error en el servicio de plan docente")
+	}
+
+	prueba = resPreAsignaciones
+	return requestresponse.APIResponseDTO(true, 200, prueba, "")
 }
