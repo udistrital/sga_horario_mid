@@ -39,15 +39,12 @@ func GetDocenteYVinculacionesPorDocumento(documento string) requestresponse.APIR
 }
 
 func GetPreasignacionesSegunDocenteYPeriodo(docenteId, periodoId string) requestresponse.APIResponse {
-	var prueba map[string]interface{}
-
-	urlPreasignaciones := beego.AppConfig.String("PlanDocenteService") + "pre_asignacion?query=docente_id:" + docenteId + ",periodo_id:" + periodoId + ",activo:true&limit=0"
-	fmt.Println(urlPreasignaciones)
+	urlPreasignaciones := beego.AppConfig.String("PlanDocenteService") +
+		"pre_asignacion?query=docente_id:" + docenteId + ",periodo_id:" + periodoId + ",aprobacion_docente:true,aprobacion_proyecto:true,activo:true&limit=0"
 	var resPreAsignaciones map[string]interface{}
 	if err := request.GetJson(urlPreasignaciones, &resPreAsignaciones); err != nil {
 		return requestresponse.APIResponseDTO(false, 500, nil, "Error en el servicio de plan docente")
 	}
 
-	prueba = resPreAsignaciones
-	return requestresponse.APIResponseDTO(true, 200, prueba, "")
+	return requestresponse.APIResponseDTO(true, 200, resPreAsignaciones["Data"], "")
 }
