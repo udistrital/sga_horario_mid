@@ -11,6 +11,7 @@ func ObtenerEspacioAcademicoSegunId(espacioId string) (map[string]interface{}, e
 	var resultado map[string]interface{}
 	urlGetEspacio := beego.AppConfig.String("EspaciosAcademicosService") + "espacio-academico?query=_id:" + espacioId + "&fields=nombre,grupo,espacio_academico_padre"
 
+	fmt.Println(urlGetEspacio)
 	if err := request.GetJson(urlGetEspacio, &resultado); err != nil {
 		return nil, err
 	}

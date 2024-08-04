@@ -72,6 +72,7 @@ func GetColocacionesDeModuloHorario(grupoEstudioId string) ([]map[string]interfa
 func GetColocacionesDeModuloPlanDocente(grupoEstudioId, periodoId string) ([]map[string]interface{}, error) {
 	//Obtengo los planes docente que pertenecen al periodo dado
 	urlPlanDocente := beego.AppConfig.String("PlanDocenteService") + "plan_docente?query=periodo_id:" + periodoId + ",activo:true&limit=0"
+
 	var planesDocente map[string]interface{}
 	if err := request.GetJson(urlPlanDocente, &planesDocente); err != nil {
 		return nil, fmt.Errorf("error en el servicio de plan docente: %w", err)
@@ -120,6 +121,7 @@ func GetColocacionesDeModuloPlanDocente(grupoEstudioId, periodoId string) ([]map
 				}
 				//accedo a la colocacion espacio de la carga plan
 				urlColocacion := beego.AppConfig.String("HorarioService") + "colocacion-espacio-academico/" + cargaPlanMap["colocacion_espacio_academico_id"].(string)
+
 				var colocacion map[string]interface{}
 				if err := request.GetJson(urlColocacion, &colocacion); err != nil {
 					errCh <- fmt.Errorf("error en el servicio horario: %w", err)
