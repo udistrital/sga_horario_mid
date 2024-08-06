@@ -23,6 +23,11 @@ func init() {
 				&controllers.ColocacionEspacioAcademicoController{},
 			),
 		),
+		beego.NSNamespace("/espacio-fisico",
+			beego.NSInclude(
+				&controllers.EspacioFisicoController{},
+			),
+		),
 		beego.NSNamespace("/docente",
 			beego.NSInclude(
 				&controllers.DocenteController{},
