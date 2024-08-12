@@ -38,6 +38,11 @@ func init() {
 				&controllers.GrupoEstudioController{},
 			),
 		),
+		beego.NSNamespace("/horario",
+			beego.NSInclude(
+				&controllers.HorarioController{},
+			),
+		),
 	)
 	beego.AddNamespace(ns)
 }
