@@ -54,7 +54,7 @@ func init() {
 
     beego.GlobalControllerRouter["github.com/udistrital/sga_horario_mid/controllers:HorarioController"] = append(beego.GlobalControllerRouter["github.com/udistrital/sga_horario_mid/controllers:HorarioController"],
         beego.ControllerComments{
-            Method: "GetCalendarioParaHorario",
+            Method: "GetActividadesParaHorario",
             Router: "/calendario",
             AllowHTTPMethods: []string{"get"},
             MethodParams: param.Make(),

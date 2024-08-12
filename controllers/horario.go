@@ -31,7 +31,7 @@ func (c *HorarioController) GetActividadesParaHorario() {
 	nivelId := c.GetString("nivel-id")
 	dependeciaId := c.GetString("dependencia-id")
 
-	respuesta := services.GetActividadesParaHorario(periodoId, nivelId, dependeciaId)
+	respuesta := services.GetActividadesParaHorarioYPlanDocente(periodoId, nivelId, dependeciaId)
 
 	c.Ctx.Output.SetStatus(respuesta.Status)
 
