@@ -13,7 +13,7 @@ type HorarioController struct {
 
 // URLMapping ...
 func (c *HorarioController) URLMapping() {
-	c.Mapping("GetCalendarioParaHorario", c.GetCalendarioParaHorario)
+	c.Mapping("GetActividadesParaHorario", c.GetActividadesParaHorario)
 }
 
 // @Title GetCalendarioParaHorario
@@ -24,14 +24,14 @@ func (c *HorarioController) URLMapping() {
 // @Success 200 {}
 // @Failure 403 body is empty
 // @router /calendario [get]
-func (c *HorarioController) GetCalendarioParaHorario() {
+func (c *HorarioController) GetActividadesParaHorario() {
 	defer errorhandler.HandlePanic(&c.Controller)
 
 	periodoId := c.GetString("periodo-id")
 	nivelId := c.GetString("nivel-id")
 	dependeciaId := c.GetString("dependencia-id")
 
-	respuesta := services.GetCalendarioParaHorario(periodoId, nivelId, dependeciaId)
+	respuesta := services.GetActividadesParaHorario(periodoId, nivelId, dependeciaId)
 
 	c.Ctx.Output.SetStatus(respuesta.Status)
 
