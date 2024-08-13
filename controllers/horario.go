@@ -13,10 +13,10 @@ type HorarioController struct {
 
 // URLMapping ...
 func (c *HorarioController) URLMapping() {
-	c.Mapping("GetActividadesParaHorario", c.GetActividadesParaHorario)
+	c.Mapping("GetActividadesParaHorarioYPlanDocente", c.GetActividadesParaHorarioYPlanDocente)
 }
 
-// @Title GetCalendarioParaHorario
+// @Title GetActividadesParaHorarioYPlanDocente
 // @Description Obtener si hay eventos de calendario para hacer acciones con el modulo de horario
 // @Param	periodo-id		query	string	false	"Se recibe parametro: id del periodo"
 // @Param	nivel-id		query	string	false	"Se recibe parametro: id del nivel"
@@ -24,7 +24,7 @@ func (c *HorarioController) URLMapping() {
 // @Success 200 {}
 // @Failure 403 body is empty
 // @router /calendario [get]
-func (c *HorarioController) GetActividadesParaHorario() {
+func (c *HorarioController) GetActividadesParaHorarioYPlanDocente() {
 	defer errorhandler.HandlePanic(&c.Controller)
 
 	periodoId := c.GetString("periodo-id")

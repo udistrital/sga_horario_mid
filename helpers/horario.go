@@ -73,7 +73,7 @@ func GetTipoEventosSegunEspecificacion(calendarios []map[string]interface{}, esp
 }
 
 func GetActividadesParaHorarioYPlanDocente(tipoEventosConEspecificacion []map[string]interface{}, dependenciaIdInt int) (map[string]interface{}, error) {
-	var actividadesInscripcionHorario, actividadesInscripcionPlanDocente []map[string]interface{}
+	var actividadesGestionHorario, actividadesGestionPlanDocente []map[string]interface{}
 
 	for _, tipoEvento := range tipoEventosConEspecificacion {
 		urlCalendarioEvento := beego.AppConfig.String("EventoService") + "calendario_evento?query=tipo_evento_id:" + strconv.Itoa(int(tipoEvento["Id"].(float64))) +
@@ -89,7 +89,7 @@ func GetActividadesParaHorarioYPlanDocente(tipoEventosConEspecificacion []map[st
 
 			nombreEvento := strings.ToLower(strings.TrimSpace(calendarioEvento["Nombre"].(string)))
 			esHorario := strings.Contains(nombreEvento, "horario")
-			esPlanDocente := strings.Contains(nombreEvento, "docente")
+			esPlanDocente := strings.Contains(nombreEvento, "plan") && strings.Contains(nombreEvento, "docente")
 
 			if esHorario || esPlanDocente {
 				for _, fecha := range dependencia["fechas"].([]interface{}) {
@@ -105,10 +105,10 @@ func GetActividadesParaHorarioYPlanDocente(tipoEventosConEspecificacion []map[st
 						calendarioEvento["DentroFechas"] = fechaHoy.After(fechaInicio) && fechaHoy.Before(fechaFin)
 
 						if esHorario {
-							actividadesInscripcionHorario = append(actividadesInscripcionHorario, calendarioEvento)
+							actividadesGestionHorario = append(actividadesGestionHorario, calendarioEvento)
 						}
 						if esPlanDocente {
-							actividadesInscripcionPlanDocente = append(actividadesInscripcionPlanDocente, calendarioEvento)
+							actividadesGestionPlanDocente = append(actividadesGestionPlanDocente, calendarioEvento)
 						}
 					}
 				}
@@ -117,8 +117,8 @@ func GetActividadesParaHorarioYPlanDocente(tipoEventosConEspecificacion []map[st
 	}
 
 	actividades := map[string]interface{}{
-		"actividadesInscripcionHorario":     actividadesInscripcionHorario,
-		"actividadesInscripcionPlanDocente": actividadesInscripcionPlanDocente,
+		"actividadesGestionHorario":     actividadesGestionHorario,
+		"actividadesGestionPlanDocente": actividadesGestionPlanDocente,
 	}
 
 	return actividades, nil
