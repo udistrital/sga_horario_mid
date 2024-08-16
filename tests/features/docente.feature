@@ -8,4 +8,4 @@ Feature: tipo_inscripcion controller
 
     Examples: 
     |method|route                               |bodyreq                                   |codres         |bodyres                                  |
-    |GET   |/v1/docente/vinculaciones/11112111   |./files/req/Vacio.json                    |200 OK         |./files/res/Vvinculaciones_list.json  |
+|GET   |/v1/docente/vinculaciones/11112111      |./files/req/Vacio.json                    |200 OK         |./files/res/Vvinculaciones_list.json  |
