@@ -14,7 +14,7 @@ func GetDocenteYVinculacionesPorDocumento(documento string) requestresponse.APIR
 	urlTercero := beego.AppConfig.String("TercerosService") + "datos_identificacion?query=numero:" + documento + "&fields=Id,TerceroId"
 	var resTercero []map[string]interface{}
 	if err := request.GetJson(urlTercero, &resTercero); err != nil {
-		return requestresponse.APIResponseDTO(false, 500, nil, "Error en el servicio de terceros")
+		return requestresponse.APIResponseDTO(false, 500, nil, "Error en el servicio de terceros", err.Error())
 	}
 
 	if len(resTercero) == 0 || resTercero[0]["Id"] == nil {
@@ -43,7 +43,7 @@ func GetPreasignacionesSegunDocenteYPeriodo(docenteId, periodoId string) request
 		"pre_asignacion?query=docente_id:" + docenteId + ",periodo_id:" + periodoId + ",aprobacion_docente:true,aprobacion_proyecto:true,activo:true&limit=0"
 	var resPreAsignaciones map[string]interface{}
 	if err := request.GetJson(urlPreasignaciones, &resPreAsignaciones); err != nil {
-		return requestresponse.APIResponseDTO(false, 500, nil, "Error en el servicio de plan docente")
+		return requestresponse.APIResponseDTO(false, 500, nil, "Error en el servicio de plan docente", err.Error())
 	}
 
 	return requestresponse.APIResponseDTO(true, 200, resPreAsignaciones["Data"], "")

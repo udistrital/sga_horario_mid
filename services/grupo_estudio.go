@@ -17,7 +17,7 @@ func GetGruposEstudioSegunHorarioYSemestre(horarioId, semestreId string) request
 
 	var gruposEstudioResp map[string]interface{}
 	if err := request.GetJson(url+"?query="+query, &gruposEstudioResp); err != nil || gruposEstudioResp["Success"] == false {
-		return requestresponse.APIResponseDTO(false, 404, nil, "Error al listar horarios")
+		return requestresponse.APIResponseDTO(false, 404, nil, "Error al listar horarios", err.Error())
 	}
 
 	for _, grupoData := range gruposEstudioResp["Data"].([]interface{}) {

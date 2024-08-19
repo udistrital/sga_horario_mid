@@ -14,6 +14,7 @@ type HorarioController struct {
 // URLMapping ...
 func (c *HorarioController) URLMapping() {
 	c.Mapping("GetActividadesParaHorarioYPlanDocente", c.GetActividadesParaHorarioYPlanDocente)
+	c.Mapping("PostHorarioCopiar", c.PostHorarioCopiar)
 }
 
 // @Title GetActividadesParaHorarioYPlanDocente
@@ -37,5 +38,25 @@ func (c *HorarioController) GetActividadesParaHorarioYPlanDocente() {
 
 	c.Data["json"] = respuesta
 
+	c.ServeJSON()
+}
+
+// @Title PostHorarioCopiar
+// @Description copia un horario de grupo estudio y sus colocacaciones
+// @Param   body        body    {}  true		"body"
+// @Success 200 {}
+// @Failure 400 the request contains incorrect syntax
+// @router /copiar [post]
+func (c *HorarioController) PostHorarioCopiar() {
+
+	defer errorhandler.HandlePanic(&c.Controller)
+
+	infoParaCopiado := c.Ctx.Input.RequestBody
+
+	respuesta := services.CreateHorarioCopia(infoParaCopiado)
+
+	c.Ctx.Output.SetStatus(respuesta.Status)
+
+	c.Data["json"] = respuesta
 	c.ServeJSON()
 }
