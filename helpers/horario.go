@@ -101,7 +101,8 @@ func GetActividadesParaHorarioYPlanDocente(tipoEventosConEspecificacion []map[st
 						calendarioEvento["FechaFin"] = fechaFin
 						delete(calendarioEvento, "DependenciaId")
 
-						fechaHoy := time.Now()
+						fechaHoyStr := GetTimeBog()["Data"].(map[string]interface{})["BOG"].(string)
+						fechaHoy, _ := time.Parse(time.RFC3339, fechaHoyStr)
 						calendarioEvento["DentroFechas"] = fechaHoy.After(fechaInicio) && fechaHoy.Before(fechaFin)
 
 						if esHorario {

@@ -14,6 +14,7 @@ type GrupoEstudioController struct {
 // URLMapping ...
 func (c *GrupoEstudioController) URLMapping() {
 	c.Mapping("GetGruposEstudioSegunHorarioYSemestre", c.GetGruposEstudioSegunHorarioYSemestre)
+	c.Mapping("DeleteGrupoEstudio", c.DeleteGrupoEstudio)
 }
 
 // @Title getGrupoEstudioSegunHorarioYSemestre
@@ -35,5 +36,23 @@ func (c *GrupoEstudioController) GetGruposEstudioSegunHorarioYSemestre() {
 
 	c.Data["json"] = respuesta
 
+	c.ServeJSON()
+}
+
+// @Title deleteGrupoEstudio
+// @Description delete grupo estudio con sus colocaciones
+// @Param   id      path    string  true        "grupo de estudio id"
+// @Success 200 {string} delete success!
+// @Failure 404 not found resource
+// @router /:id [delete]
+func (c *GrupoEstudioController) DeleteGrupoEstudio() {
+	defer errorhandler.HandlePanic(&c.Controller)
+
+	grupoEstudioId := c.Ctx.Input.Param(":id")
+
+	respuesta := services.DeleteGrupoEstudio(grupoEstudioId)
+
+	c.Ctx.Output.SetStatus(respuesta.Status)
+	c.Data["json"] = respuesta
 	c.ServeJSON()
 }
