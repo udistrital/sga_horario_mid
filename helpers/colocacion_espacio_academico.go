@@ -237,3 +237,22 @@ func Contains(slice []interface{}, item string) bool {
 	}
 	return false
 }
+
+func DesactivarColocacion(colocacionId string) (map[string]interface{}, error) {
+	urlColocacion := beego.AppConfig.String("HorarioService") + "colocacion-espacio-academico/" + colocacionId
+	var colocacion map[string]interface{}
+	if err := request.GetJson(urlColocacion, &colocacion); err != nil {
+		return nil, fmt.Errorf("Error en el servicio horario: %v", err)
+	}
+
+	colocacionData := colocacion["Data"].(map[string]interface{})
+	colocacionData["Activo"] = false
+
+	urlColocacionPost := beego.AppConfig.String("HorarioService") + "colocacion-espacio-academico/" + colocacionData["_id"].(string)
+	var colocacionPost map[string]interface{}
+	if err := request.SendJson(urlColocacionPost, "PUT", &colocacionPost, colocacionData); err != nil {
+		return nil, fmt.Errorf("Error en el servicio de horario: %v", err)
+	}
+
+	return colocacion, nil
+}
