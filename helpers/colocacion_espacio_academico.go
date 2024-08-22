@@ -3,6 +3,7 @@ package helpers
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -198,7 +199,7 @@ func GetSedeEdificioSalon(colocacion map[string]interface{}) error {
 	resumen := colocacion["ResumenColocacionEspacioFisico"].(string)
 	var resumenMap map[string]interface{}
 	if json.Unmarshal([]byte(resumen), &resumenMap) != nil {
-		return fmt.Errorf("Error al deserializar resumen")
+		return fmt.Errorf("error al deserializar resumen")
 	}
 	espacioFisico := resumenMap["espacio_fisico"].(map[string]interface{})
 
@@ -211,7 +212,7 @@ func GetSedeEdificioSalon(colocacion map[string]interface{}) error {
 			if fetchErr := request.GetJson(url, &res); fetchErr != nil {
 				mu.Lock()
 				if err == nil {
-					err = fmt.Errorf("Error en el servicio de oikos: %s", idField)
+					err = fmt.Errorf("error en el servicio de oikos: %s", idField)
 				}
 				mu.Unlock()
 				return
@@ -242,7 +243,7 @@ func DesactivarColocacion(colocacionId string) (map[string]interface{}, error) {
 	urlColocacion := beego.AppConfig.String("HorarioService") + "colocacion-espacio-academico/" + colocacionId
 	var colocacion map[string]interface{}
 	if err := request.GetJson(urlColocacion, &colocacion); err != nil {
-		return nil, fmt.Errorf("Error en el servicio horario: %v", err)
+		return nil, fmt.Errorf("error en el servicio horario: %v", err)
 	}
 
 	colocacionData := colocacion["Data"].(map[string]interface{})
@@ -251,8 +252,86 @@ func DesactivarColocacion(colocacionId string) (map[string]interface{}, error) {
 	urlColocacionPost := beego.AppConfig.String("HorarioService") + "colocacion-espacio-academico/" + colocacionData["_id"].(string)
 	var colocacionPost map[string]interface{}
 	if err := request.SendJson(urlColocacionPost, "PUT", &colocacionPost, colocacionData); err != nil {
-		return nil, fmt.Errorf("Error en el servicio de horario: %v", err)
+		return nil, fmt.Errorf("error en el servicio de horario: %v", err)
 	}
 
 	return colocacion, nil
+}
+
+// haySobreposicion verifica si hay una superposición entre la colocación a poner
+// con la colocacion ya puesta en base de datos
+//
+// Retorna:
+//
+// - true si la colocacion a poner y la colocacion ya establecida se solapan
+//
+// - false en caso contrario.
+func HaySobreposicion(colocacionAPoner, colocacionPuesta map[string]interface{}) bool {
+	finalX := colocacionAPoner["finalPosition"].(map[string]interface{})["x"].(float64)
+	horaFormatoColocacion := colocacionAPoner["horaFormato"].(string)
+
+	inicioColocacion, finColocacion, err := ObtenerMinutosDeRangoHora(horaFormatoColocacion)
+	if err != nil {
+		fmt.Println("Error al parsear horaFormato de colocacion:", err)
+		return false
+	}
+
+	if colocacionPuesta["finalPosition"].(map[string]interface{})["x"].(float64) == finalX {
+		horaFormatoEspacio := colocacionPuesta["horaFormato"].(string)
+		inicioEspacio, finEspacio, err := ObtenerMinutosDeRangoHora(horaFormatoEspacio)
+		if err != nil {
+			fmt.Println("Error al parsear horaFormato de espacio ocupado:", err)
+			return false
+		}
+
+		if (inicioColocacion < finEspacio && finColocacion > inicioEspacio) ||
+			(inicioEspacio < finColocacion && finEspacio > inicioColocacion) {
+			return true
+		}
+	}
+
+	return false
+}
+
+// ObtenerMinutosDeRangoHora convierte un rango de horas en formato "HH:MM - HH:MM"
+// a minutos desde medianoche.
+//
+// Parámetros:
+// - rangoHora: Cadena en formato "HH:MM - HH:MM".
+//
+// Retorna:
+// - inicio: Minutos desde medianoche del inicio del rango.
+// - fin: Minutos desde medianoche del fin del rango.
+// - err: Error si el formato es inválido.
+//
+// Ejemplo:
+// Si rangoHora es "08:45 - 17:30", retorna:
+//
+// - inicio = 525 -> (8*60 + 45)
+//
+// - fin = 1050 -> (17*60 + 30)
+func ObtenerMinutosDeRangoHora(rangoHora string) (inicio, fin int, err error) {
+	horas := strings.Split(rangoHora, " - ")
+	if len(horas) != 2 {
+		return 0, 0, fmt.Errorf("formato de hora inválido")
+	}
+
+	convertir := func(hora string) (int, error) {
+		partes := strings.Split(hora, ":")
+		if len(partes) != 2 {
+			return 0, fmt.Errorf("formato de hora inválido")
+		}
+		h, _ := strconv.Atoi(partes[0])
+		m, _ := strconv.Atoi(partes[1])
+		return h*60 + m, nil
+	}
+
+	if inicio, err = convertir(horas[0]); err != nil {
+		return 0, 0, err
+	}
+	if fin, err = convertir(horas[1]); err != nil {
+		return 0, 0, err
+	}
+
+	return inicio, fin, nil
 }

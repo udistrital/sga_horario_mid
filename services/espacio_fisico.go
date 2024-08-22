@@ -1,13 +1,15 @@
 package services
 
 import (
+	"fmt"
 	"sync"
 
 	"github.com/udistrital/sga_horario_mid/helpers"
 	"github.com/udistrital/utils_oas/requestresponse"
 )
 
-func GetEspaciosOcupadoSegunPeriodo(espacioFisicoId, periodoId string) requestresponse.APIResponse {
+func GetEspaciosFisicosOcupadosSegunPeriodo(espacioFisicoId, periodoId string) requestresponse.APIResponse {
+	fmt.Println(espacioFisicoId)
 	var espaciosOcupadosHorario, espaciosOcupadosPlanDocente []map[string]interface{}
 	var errPlanDocente, errHorario error
 
@@ -16,12 +18,12 @@ func GetEspaciosOcupadoSegunPeriodo(espacioFisicoId, periodoId string) requestre
 
 	go func() {
 		defer wg.Done()
-		espaciosOcupadosHorario, errHorario = helpers.GetEspaciosOcupadoSegunPeriodo(espacioFisicoId, periodoId)
+		espaciosOcupadosHorario, errHorario = helpers.GetEspaciosFisicosOcupadosDeHorario(espacioFisicoId, periodoId)
 	}()
 
 	go func() {
 		defer wg.Done()
-		espaciosOcupadosPlanDocente, errPlanDocente = helpers.GetEspaciosOcupadoSegunPlanDocente(espacioFisicoId, periodoId)
+		espaciosOcupadosPlanDocente, errPlanDocente = helpers.GetEspaciosFisicosOcupadosDePlanDocente(espacioFisicoId, periodoId)
 	}()
 
 	wg.Wait()

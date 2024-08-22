@@ -12,7 +12,7 @@ func GetVinculacionesDeDocente(docenteId string) ([]map[string]interface{}, erro
 	urlVinculacion := beego.AppConfig.String("TercerosService") + "vinculacion?query=TerceroPrincipalId.Id:" + docenteId + "&fields=Id,TipoVinculacionId"
 	var vinculacionesId []map[string]interface{}
 	if err := request.GetJson(urlVinculacion, &vinculacionesId); err != nil {
-		return nil, fmt.Errorf("Error en el servicio de terceros")
+		return nil, fmt.Errorf("error en el servicio de terceros")
 	}
 
 	if len(vinculacionesId) == 0 {

@@ -9,7 +9,7 @@ import (
 	"github.com/udistrital/utils_oas/request"
 )
 
-func GetEspaciosOcupadoSegunPeriodo(espacioFisicoId, periodoId string) ([]map[string]interface{}, error) {
+func GetEspaciosFisicosOcupadosDeHorario(espacioFisicoId, periodoId string) ([]map[string]interface{}, error) {
 	var ocupados []map[string]interface{}
 	var mu sync.Mutex
 
@@ -80,6 +80,7 @@ func GetEspaciosOcupadoSegunPeriodo(espacioFisicoId, periodoId string) ([]map[st
 			"_id":           colocacion["_id"].(string),
 			"horas":         int(colocacionEspacio["horas"].(float64)),
 			"finalPosition": colocacionEspacio["finalPosition"],
+			"horaFormato":   colocacionEspacio["horaFormato"],
 		})
 		mu.Unlock()
 	}
@@ -87,7 +88,7 @@ func GetEspaciosOcupadoSegunPeriodo(espacioFisicoId, periodoId string) ([]map[st
 	return ocupados, nil
 }
 
-func GetEspaciosOcupadoSegunPlanDocente(espacioFisicoId, periodoId string) ([]map[string]interface{}, error) {
+func GetEspaciosFisicosOcupadosDePlanDocente(espacioFisicoId, periodoId string) ([]map[string]interface{}, error) {
 	var ocupados []map[string]interface{}
 	var mu sync.Mutex
 
@@ -155,6 +156,7 @@ func GetEspaciosOcupadoSegunPlanDocente(espacioFisicoId, periodoId string) ([]ma
 				"_id":           colocacionData["_id"],
 				"horas":         int(colocacionEspacio["horas"].(float64)),
 				"finalPosition": colocacionEspacio["finalPosition"],
+				"horaFormato":   colocacionEspacio["horaFormato"],
 			}
 		}
 		close(colocacionesChan)
