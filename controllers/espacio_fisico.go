@@ -29,7 +29,7 @@ func (c *EspacioFisicoController) GetEspaciosOCupadoSegunPeriodo() {
 	espacioFisicoId := c.GetString("espacio-fisico-id")
 	periodoId := c.GetString("periodo-id")
 
-	respuesta := services.GetEspaciosOcupadoSegunPeriodo(espacioFisicoId, periodoId)
+	respuesta := services.GetEspaciosFisicosOcupadosSegunPeriodo(espacioFisicoId, periodoId)
 
 	c.Ctx.Output.SetStatus(respuesta.Status)
 

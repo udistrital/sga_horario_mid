@@ -11,6 +11,7 @@ import (
 	"github.com/udistrital/utils_oas/request"
 )
 
+// GetCalendarioDeDependencia obtiene una lista de calendarios que contienen una dependencia (proyecto) específica.
 func GetCalendarioDeDependencia(periodoId, nivelId, dependenciaId string) ([]map[string]interface{}, error) {
 	dependeciaIdInt, _ := strconv.Atoi(dependenciaId)
 	urlCalendario := beego.AppConfig.String("EventoService") + "calendario?query=Activo:true,Nivel:" + nivelId + ",PeriodoId:" + periodoId +

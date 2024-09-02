@@ -16,6 +16,15 @@ func init() {
             Filters: nil,
             Params: nil})
 
+    beego.GlobalControllerRouter["github.com/udistrital/sga_horario_mid/controllers:ColocacionEspacioAcademicoController"] = append(beego.GlobalControllerRouter["github.com/udistrital/sga_horario_mid/controllers:ColocacionEspacioAcademicoController"],
+        beego.ControllerComments{
+            Method: "GetSobreposicionColocacion",
+            Router: "/sobreposicion",
+            AllowHTTPMethods: []string{"get"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
     beego.GlobalControllerRouter["github.com/udistrital/sga_horario_mid/controllers:DocenteController"] = append(beego.GlobalControllerRouter["github.com/udistrital/sga_horario_mid/controllers:DocenteController"],
         beego.ControllerComments{
             Method: "GetPreasignacionesSegunDocenteYPeriodo",
@@ -66,15 +75,6 @@ func init() {
             Method: "GetActividadesParaHorarioYPlanDocente",
             Router: "/calendario",
             AllowHTTPMethods: []string{"get"},
-            MethodParams: param.Make(),
-            Filters: nil,
-            Params: nil})
-
-    beego.GlobalControllerRouter["github.com/udistrital/sga_horario_mid/controllers:HorarioController"] = append(beego.GlobalControllerRouter["github.com/udistrital/sga_horario_mid/controllers:HorarioController"],
-        beego.ControllerComments{
-            Method: "PostHorarioCopiar",
-            Router: "/copiar",
-            AllowHTTPMethods: []string{"post"},
             MethodParams: param.Make(),
             Filters: nil,
             Params: nil})
