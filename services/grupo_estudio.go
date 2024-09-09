@@ -22,16 +22,25 @@ func GetGruposEstudioSegunHorarioYSemestre(horarioId, semestreId string) request
 
 	for _, grupoData := range gruposEstudioResp["Data"].([]interface{}) {
 		grupo := grupoData.(map[string]interface{})
-		espacios := make([]map[string]interface{}, 0)
+		espaciosActivos := make([]map[string]interface{}, 0)
+		espaciosDesactivos := make([]map[string]interface{}, 0)
 
 		for _, espacioId := range grupo["EspaciosAcademicos"].([]interface{}) {
 			if espacio, errEspacio := helpers.ObtenerEspacioAcademicoSegunId(espacioId.(string)); errEspacio == nil {
-				espacios = append(espacios, espacio)
+				if espacio["activo"] == true {
+					espaciosActivos = append(espaciosActivos, espacio)
+				} else {
+					espaciosDesactivos = append(espaciosDesactivos, espacio)
+				}
 			} else {
 				return requestresponse.APIResponseDTO(false, 500, nil, "Error al obtener espacio académico"+errEspacio.Error())
 			}
 		}
-		grupo["EspaciosAcademicos"] = espacios
+
+		grupo["EspaciosAcademicos"] = map[string]interface{}{
+			"activos":    espaciosActivos,
+			"desactivos": espaciosDesactivos,
+		}
 		grupo["Nombre"] = fmt.Sprintf("%s %s", grupo["CodigoProyecto"], grupo["IndicadorGrupo"])
 	}
 	return requestresponse.APIResponseDTO(true, 200, gruposEstudioResp["Data"], nil)
