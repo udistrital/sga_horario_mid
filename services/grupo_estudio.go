@@ -47,13 +47,6 @@ func GetGruposEstudioSegunHorarioYSemestre(horarioId, semestreId string) request
 }
 
 func DeleteGrupoEstudio(grupoEstudioId string) requestresponse.APIResponse {
-	//eliminar grupo de estudio
-	_, err := helpers.DesactivarGrupoEstudio(grupoEstudioId)
-	if err != nil {
-		return requestresponse.APIResponseDTO(false, 404, nil, err.Error())
-	}
-
-	//eliminar colocaciones del grupo de estudio
 	urlColocaciones := beego.AppConfig.String("HorarioService") + "colocacion-espacio-academico?query=Activo:true,GrupoEstudioId:" + grupoEstudioId + "&limit=0"
 	var colocaciones map[string]interface{}
 	if err := request.GetJson(urlColocaciones, &colocaciones); err != nil {
@@ -61,13 +54,13 @@ func DeleteGrupoEstudio(grupoEstudioId string) requestresponse.APIResponse {
 	}
 
 	if len(colocaciones["Data"].([]interface{})) > 0 {
-		for _, colocacionData := range colocaciones["Data"].([]interface{}) {
-			colocacion := colocacionData.(map[string]interface{})
-			_, err := helpers.DesactivarColocacion(colocacion["_id"].(string))
-			if err != nil {
-				return requestresponse.APIResponseDTO(false, 500, nil, err.Error())
-			}
-		}
+		return requestresponse.APIResponseDTO(true, 200, nil, "tiene colocaciones")
 	}
+
+	_, err := helpers.DesactivarGrupoEstudio(grupoEstudioId)
+	if err != nil {
+		return requestresponse.APIResponseDTO(false, 404, nil, err.Error())
+	}
+
 	return requestresponse.APIResponseDTO(true, 200, nil, "delete success")
 }

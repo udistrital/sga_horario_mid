@@ -40,7 +40,7 @@ func (c *GrupoEstudioController) GetGruposEstudioSegunHorarioYSemestre() {
 }
 
 // @Title deleteGrupoEstudio
-// @Description delete grupo estudio con sus colocaciones
+// @Description delete grupo estudio
 // @Param   id      path    string  true        "grupo de estudio id"
 // @Success 200 {string} delete success!
 // @Failure 404 not found resource
