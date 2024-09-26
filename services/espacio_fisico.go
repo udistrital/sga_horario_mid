@@ -1,56 +1,36 @@
 package services
 
 import (
-	"fmt"
-	"sync"
+	"encoding/json"
 
-	"github.com/udistrital/sga_horario_mid/helpers"
+	"github.com/astaxie/beego"
+	"github.com/udistrital/utils_oas/request"
 	"github.com/udistrital/utils_oas/requestresponse"
 )
 
 func GetEspaciosFisicosOcupadosSegunPeriodo(espacioFisicoId, periodoId string) requestresponse.APIResponse {
-	fmt.Println(espacioFisicoId)
-	var espaciosOcupadosHorario, espaciosOcupadosPlanDocente []map[string]interface{}
-	var errPlanDocente, errHorario error
+	urlColocaciones := beego.AppConfig.String("HorarioService") +
+		"colocacion-espacio-academico?query=PeriodoId:" + periodoId + ",EspacioFisicoId:" + espacioFisicoId + ",Activo:true&limit=0"
 
-	var wg sync.WaitGroup
-	wg.Add(2)
-
-	go func() {
-		defer wg.Done()
-		espaciosOcupadosHorario, errHorario = helpers.GetEspaciosFisicosOcupadosDeHorario(espacioFisicoId, periodoId)
-	}()
-
-	go func() {
-		defer wg.Done()
-		espaciosOcupadosPlanDocente, errPlanDocente = helpers.GetEspaciosFisicosOcupadosDePlanDocente(espacioFisicoId, periodoId)
-	}()
-
-	wg.Wait()
-
-	if errPlanDocente != nil {
-		return requestresponse.APIResponseDTO(false, 500, nil, errPlanDocente.Error())
+	var colocaciones map[string]interface{}
+	if err := request.GetJson(urlColocaciones, &colocaciones); err != nil {
+		return requestresponse.APIResponseDTO(false, 500, nil, "error en el servicio de horarios"+err.Error())
 	}
 
-	if errHorario != nil {
-		return requestresponse.APIResponseDTO(false, 500, nil, errHorario.Error())
+	var ocupados []map[string]interface{}
+
+	for _, colocacion := range colocaciones["Data"].([]interface{}) {
+		colocacionData, _ := colocacion.(map[string]interface{})
+
+		var colocacionEspacio map[string]interface{}
+		_ = json.Unmarshal([]byte(colocacionData["ColocacionEspacioAcademico"].(string)), &colocacionEspacio)
+
+		ocupados = append(ocupados, map[string]interface{}{
+			"_id":           colocacionData["_id"],
+			"horas":         int(colocacionEspacio["horas"].(float64)),
+			"finalPosition": colocacionEspacio["finalPosition"],
+			"horaFormato":   colocacionEspacio["horaFormato"],
+		})
 	}
-
-	//en este se unen las colocaciones del modulo de plan docente y horario
-	ocupadosMap := make(map[string]map[string]interface{})
-
-	//Si una colocacion se repite se deja una
-	for _, espacioOcupado := range append(espaciosOcupadosPlanDocente, espaciosOcupadosHorario...) {
-		id, ok := espacioOcupado["_id"].(string)
-		if ok && espacioOcupado != nil && ocupadosMap[id] == nil {
-			ocupadosMap[id] = espacioOcupado
-		}
-	}
-
-	espaciosOcupados := make([]map[string]interface{}, 0, len(ocupadosMap))
-	for _, colocacion := range ocupadosMap {
-		espaciosOcupados = append(espaciosOcupados, colocacion)
-	}
-
-	return requestresponse.APIResponseDTO(true, 200, espaciosOcupados, "")
+	return requestresponse.APIResponseDTO(true, 200, ocupados, "")
 }

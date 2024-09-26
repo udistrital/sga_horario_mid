@@ -50,48 +50,33 @@ func GetSobreposicionColocacion(colocacionId, periodoId string) requestresponse.
 }
 
 func GetColocacionesSegunGrupoEstudioYPeriodo(grupoEstudioId, periodoId string) requestresponse.APIResponse {
-	var colocacionesDeModuloPlanDocente []map[string]interface{}
-	var colocacionesDeModuloHorario []map[string]interface{}
-	var errPlanDocente, errHorario error
+	colocacionesTotales, err := helpers.GetColocacionesSegunGrupoEstudioYPeriodo(grupoEstudioId, periodoId)
+	if err != nil {
+		return requestresponse.APIResponseDTO(false, 500, nil, fmt.Sprintf("error en metodo GetColocacionesSegunGrupoEstudioYPeriodo: %v", err), err)
+	}
 
 	var wg sync.WaitGroup
-	wg.Add(2)
+	errChan := make(chan error, len(colocacionesTotales))
 
-	go func() {
-		defer wg.Done()
-		colocacionesDeModuloPlanDocente, errPlanDocente = helpers.GetColocacionesDeModuloPlanDocente(grupoEstudioId, periodoId)
-	}()
-
-	go func() {
-		defer wg.Done()
-		colocacionesDeModuloHorario, errHorario = helpers.GetColocacionesDeModuloHorario(grupoEstudioId)
-	}()
+	for _, colocacion := range colocacionesTotales {
+		wg.Add(1)
+		go func(colocacion map[string]interface{}) {
+			defer wg.Done()
+			_, err := helpers.AgregarInfoAdicionalColocacion(colocacion)
+			if err != nil {
+				errChan <- err
+			}
+		}(colocacion.(map[string]interface{}))
+	}
 
 	wg.Wait()
+	close(errChan)
 
-	if errPlanDocente != nil {
-		return requestresponse.APIResponseDTO(false, 500, nil, errPlanDocente.Error())
-	}
-
-	if errHorario != nil {
-		return requestresponse.APIResponseDTO(false, 500, nil, errHorario.Error())
-	}
-
-	//en este se unen las colocaciones del modulo de plan docente y horario
-	colocacionesMap := make(map[string]map[string]interface{})
-
-	//Si una colocacion se repite se deja una, priorizando la del modulo de plan docente
-	for _, colocacion := range append(colocacionesDeModuloPlanDocente, colocacionesDeModuloHorario...) {
-		id, ok := colocacion["_id"].(string)
-		if ok && colocacion != nil && colocacionesMap[id] == nil {
-			colocacionesMap[id] = colocacion
+	for err := range errChan {
+		if err != nil {
+			return requestresponse.APIResponseDTO(false, 500, nil, fmt.Sprintf("error en metodo AgregarInfoAdicionalColocacion: %v", err), err)
 		}
 	}
 
-	colocaciones := make([]map[string]interface{}, 0, len(colocacionesMap))
-	for _, colocacion := range colocacionesMap {
-		colocaciones = append(colocaciones, colocacion)
-	}
-
-	return requestresponse.APIResponseDTO(true, 200, colocaciones, "")
+	return requestresponse.APIResponseDTO(true, 200, colocacionesTotales, "")
 }
