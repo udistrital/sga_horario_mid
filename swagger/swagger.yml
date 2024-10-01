@@ -31,6 +31,23 @@ paths:
           description: '{}'
         "403":
           description: body is empty
+  /colocacion-espacio-academico/{id}:
+    delete:
+      tags:
+      - colocacion-espacio-academico
+      description: delete colocacion espacio academico (delete carga plan si tiene)
+      operationId: ColocacionEspacioAcademicoController.deleteGrupoEstudio
+      parameters:
+      - in: path
+        name: id
+        description: colocacion espacio academico id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: '{string} delete success!'
+        "404":
+          description: not found resource
   /colocacion-espacio-academico/info-adicional/{id}:
     get:
       tags:

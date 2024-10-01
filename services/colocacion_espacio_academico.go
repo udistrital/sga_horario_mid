@@ -74,7 +74,7 @@ func GetColocacionesSegunGrupoEstudioYPeriodo(grupoEstudioId, periodoId string) 
 
 	for err := range errChan {
 		if err != nil {
-			return requestresponse.APIResponseDTO(false, 500, nil, fmt.Sprintf("error en metodo AgregarInfoAdicionalColocacion: %v", err), err)
+			return requestresponse.APIResponseDTO(false, 500, nil, fmt.Sprintf("error en metodo AgregarInfoAdicionalColocacion: %v", err))
 		}
 	}
 
@@ -94,4 +94,18 @@ func GetColocacionInfoAdicional(colocacionId string) requestresponse.APIResponse
 	}
 
 	return requestresponse.APIResponseDTO(true, 200, colocacionInfoAdicional, "")
+}
+
+func DeleteColocacionEspacioAcademico(colocacionId string) requestresponse.APIResponse {
+	_, errPlan := helpers.DesactivarCargaPlanSegunColocacion(colocacionId)
+	if errPlan != nil {
+		return requestresponse.APIResponseDTO(false, 500, nil, fmt.Sprintf("error en metodo DesactivarColocacion: %v", errPlan))
+	}
+
+	_, err := helpers.DesactivarColocacion(colocacionId)
+	if err != nil {
+		return requestresponse.APIResponseDTO(false, 500, nil, fmt.Sprintf("error en metodo DesactivarColocacion: %v", err))
+	}
+
+	return requestresponse.APIResponseDTO(true, 200, nil, "delete success")
 }

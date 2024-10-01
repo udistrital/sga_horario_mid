@@ -174,13 +174,52 @@ func DesactivarColocacion(colocacionId string) (map[string]interface{}, error) {
 	colocacionData := colocacion["Data"].(map[string]interface{})
 	colocacionData["Activo"] = false
 
-	urlColocacionPost := beego.AppConfig.String("HorarioService") + "colocacion-espacio-academico/" + colocacionData["_id"].(string)
-	var colocacionPost map[string]interface{}
-	if err := request.SendJson(urlColocacionPost, "PUT", &colocacionPost, colocacionData); err != nil {
+	urlColocacionPut := beego.AppConfig.String("HorarioService") + "colocacion-espacio-academico/" + colocacionId
+	var colocacionPut map[string]interface{}
+	if err := request.SendJson(urlColocacionPut, "PUT", &colocacionPut, colocacionData); err != nil {
 		return nil, fmt.Errorf("error en el servicio de horario: %v", err)
 	}
 
-	return colocacion, nil
+	return colocacionData, nil
+}
+
+func DesactivarCargaPlanSegunColocacion(colocacionId string) (map[string]interface{}, error) {
+	urlCargaPlan := beego.AppConfig.String("PlanDocenteService") + "carga_plan?query=colocacion_espacio_academico_id:" + colocacionId + ",activo:true"
+	var cargaPlan map[string]interface{}
+	if err := request.GetJson(urlCargaPlan, &cargaPlan); err != nil {
+		return nil, fmt.Errorf("Error en el servicio plan docente" + err.Error())
+	}
+
+	if data, ok := cargaPlan["Data"].([]interface{}); ok && len(data) > 0 {
+		cargaPlanId := cargaPlan["Data"].([]interface{})[0].(map[string]interface{})["_id"].(string)
+
+		_, err := DesactivarCargaPlan(cargaPlanId)
+		if err != nil {
+			return nil, fmt.Errorf("error en metodo DesactivarCargaPlan: %v", err.Error())
+		}
+		return cargaPlan["Data"].([]interface{})[0].(map[string]interface{}), nil
+	}
+
+	return nil, nil
+}
+
+func DesactivarCargaPlan(cargaPlanId string) (map[string]interface{}, error) {
+	urlCargaPlan := beego.AppConfig.String("PlanDocenteService") + "carga_plan/" + cargaPlanId
+	var cargaPlan map[string]interface{}
+	if err := request.GetJson(urlCargaPlan, &cargaPlan); err != nil {
+		return nil, fmt.Errorf("error en el servicio plan docente: %v", err)
+	}
+
+	cargaPlanData := cargaPlan["Data"].(map[string]interface{})
+	cargaPlanData["activo"] = false
+
+	urlCargaPlanPut := beego.AppConfig.String("PlanDocenteService") + "carga_plan/" + cargaPlanId
+	var cargaPlanPut map[string]interface{}
+	if err := request.SendJson(urlCargaPlanPut, "PUT", &cargaPlanPut, cargaPlanData); err != nil {
+		return nil, fmt.Errorf("error en el servicio de horario: %v", err)
+	}
+
+	return cargaPlanData, nil
 }
 
 // haySobreposicion verifica si hay una superposición entre la colocación a poner

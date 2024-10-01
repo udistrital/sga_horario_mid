@@ -16,6 +16,7 @@ func (c *ColocacionEspacioAcademicoController) URLMapping() {
 	c.Mapping("GetColocacionesSegunGrupoEstudioYPeriodo", c.GetColocacionesSegunGrupoEstudioYPeriodo)
 	c.Mapping("GetSobreposicionColocacion", c.GetSobreposicionColocacion)
 	c.Mapping("GetSobreposicionColocacion", c.GetColocacionInfoAdicional)
+	c.Mapping("DeleteColocacionEspacioAcademico", c.DeleteColocacionEspacioAcademico)
 }
 
 // @Title GetColocacionesSegunGrupoEstudioYPeriodo
@@ -79,6 +80,24 @@ func (c *ColocacionEspacioAcademicoController) GetColocacionInfoAdicional() {
 
 	c.Data["json"] = respuesta
 
+	c.ServeJSON()
+}
+
+// @Title deleteGrupoEstudio
+// @Description delete colocacion espacio academico (delete carga plan si tiene)
+// @Param   id      path    string  true        "colocacion espacio academico id"
+// @Success 200 {string} delete success!
+// @Failure 404 not found resource
+// @router /:id [delete]
+func (c *ColocacionEspacioAcademicoController) DeleteColocacionEspacioAcademico() {
+	defer errorhandler.HandlePanic(&c.Controller)
+
+	grupoEstudioId := c.Ctx.Input.Param(":id")
+
+	respuesta := services.DeleteColocacionEspacioAcademico(grupoEstudioId)
+
+	c.Ctx.Output.SetStatus(respuesta.Status)
+	c.Data["json"] = respuesta
 	c.ServeJSON()
 }
 
