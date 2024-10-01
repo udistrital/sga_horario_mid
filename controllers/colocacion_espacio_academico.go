@@ -15,6 +15,7 @@ type ColocacionEspacioAcademicoController struct {
 func (c *ColocacionEspacioAcademicoController) URLMapping() {
 	c.Mapping("GetColocacionesSegunGrupoEstudioYPeriodo", c.GetColocacionesSegunGrupoEstudioYPeriodo)
 	c.Mapping("GetSobreposicionColocacion", c.GetSobreposicionColocacion)
+	c.Mapping("GetSobreposicionColocacion", c.GetColocacionInfoAdicional)
 }
 
 // @Title GetColocacionesSegunGrupoEstudioYPeriodo
@@ -41,7 +42,7 @@ func (c *ColocacionEspacioAcademicoController) GetColocacionesSegunGrupoEstudioY
 
 // @Title GetSobreposicionColocacion
 // @Description get si hay una colocacion puesta en donde se quiere poner otra
-// @Param	colocacion-id	query	string	false	"Se recibe parametro: id del grupo estudio"
+// @Param	colocacion-id	query	string	false	"Se recibe parametro: id de la colocacion"
 // @Param	periodo-id	query	string	false	"Se recibe parametro: id del periodo"
 // @Success 200 {}
 // @Failure 403 body is empty
@@ -53,6 +54,26 @@ func (c *ColocacionEspacioAcademicoController) GetSobreposicionColocacion() {
 	periodoId := c.GetString("periodo-id")
 
 	respuesta := services.GetSobreposicionColocacion(colocacionId, periodoId)
+
+	c.Ctx.Output.SetStatus(respuesta.Status)
+
+	c.Data["json"] = respuesta
+
+	c.ServeJSON()
+}
+
+// @Title GetColocacionInfoAdicional
+// @Description obtiene la colocacion con mas datos sobre la misma
+// @Param   id      path    string  true "id de la colocacion"
+// @Success 200 {}
+// @Failure 403 body is empty
+// @router /info-adicional/:id [get]
+func (c *ColocacionEspacioAcademicoController) GetColocacionInfoAdicional() {
+	defer errorhandler.HandlePanic(&c.Controller)
+
+	colocacionId := c.Ctx.Input.Param(":id")
+
+	respuesta := services.GetColocacionInfoAdicional(colocacionId)
 
 	c.Ctx.Output.SetStatus(respuesta.Status)
 

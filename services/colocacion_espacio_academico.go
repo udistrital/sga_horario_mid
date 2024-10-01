@@ -80,3 +80,18 @@ func GetColocacionesSegunGrupoEstudioYPeriodo(grupoEstudioId, periodoId string) 
 
 	return requestresponse.APIResponseDTO(true, 200, colocacionesTotales, "")
 }
+
+func GetColocacionInfoAdicional(colocacionId string) requestresponse.APIResponse {
+	urlColocacion := beego.AppConfig.String("HorarioService") + "colocacion-espacio-academico/" + colocacionId
+	var colocacionEspacioAcademico map[string]interface{}
+	if err := request.GetJson(urlColocacion, &colocacionEspacioAcademico); err != nil {
+		return requestresponse.APIResponseDTO(false, 500, nil, "Error en el servicio horario"+err.Error())
+	}
+
+	colocacionInfoAdicional, err := helpers.AgregarInfoAdicionalColocacion(colocacionEspacioAcademico["Data"].(map[string]interface{}))
+	if err != nil {
+		return requestresponse.APIResponseDTO(false, 500, nil, err.Error())
+	}
+
+	return requestresponse.APIResponseDTO(true, 200, colocacionInfoAdicional, "")
+}
