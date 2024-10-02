@@ -247,9 +247,68 @@
                         "description": "body is empty"
                     }
                 }
+            },
+            "post": {
+                "tags": [
+                    "grupo-estudio"
+                ],
+                "description": "create grupo de estudio",
+                "operationId": "GrupoEstudioController.PostGrupoEstudio",
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/{}"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{}"
+                    },
+                    "400": {
+                        "description": "the request contains incorrect syntax"
+                    }
+                }
             }
         },
         "/grupo-estudio/{id}": {
+            "put": {
+                "tags": [
+                    "grupo-estudio"
+                ],
+                "description": "Update grupo de estudio",
+                "operationId": "GrupoEstudioController.PutGrupoEstudio",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "description": "grupo de estudio id",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/{}"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{}"
+                    },
+                    "400": {
+                        "description": "the request contains incorrect syntax"
+                    }
+                }
+            },
             "delete": {
                 "tags": [
                     "grupo-estudio"
@@ -311,6 +370,12 @@
                     }
                 }
             }
+        }
+    },
+    "definitions": {
+        "{}": {
+            "title": "{}",
+            "type": "object"
         }
     },
     "tags": [

@@ -3,6 +3,7 @@ package services
 import (
 	// "fmt"
 
+	"encoding/json"
 	"fmt"
 
 	"github.com/astaxie/beego"
@@ -33,7 +34,7 @@ func GetGruposEstudioSegunHorarioYSemestre(horarioId, semestreId string) request
 					espaciosDesactivos = append(espaciosDesactivos, espacio)
 				}
 			} else {
-				return requestresponse.APIResponseDTO(false, 500, nil, "Error al obtener espacio académico"+errEspacio.Error())
+				return requestresponse.APIResponseDTO(false, 500, nil, "error al obtener espacio académico "+errEspacio.Error())
 			}
 		}
 
@@ -50,7 +51,7 @@ func DeleteGrupoEstudio(grupoEstudioId string) requestresponse.APIResponse {
 	urlColocaciones := beego.AppConfig.String("HorarioService") + "colocacion-espacio-academico?query=Activo:true,GrupoEstudioId:" + grupoEstudioId + "&limit=0"
 	var colocaciones map[string]interface{}
 	if err := request.GetJson(urlColocaciones, &colocaciones); err != nil {
-		return requestresponse.APIResponseDTO(false, 404, nil, "Error en el servicio horario"+err.Error())
+		return requestresponse.APIResponseDTO(false, 500, nil, "Error en el servicio horario"+err.Error())
 	}
 
 	if len(colocaciones["Data"].([]interface{})) > 0 {
@@ -59,8 +60,58 @@ func DeleteGrupoEstudio(grupoEstudioId string) requestresponse.APIResponse {
 
 	_, err := helpers.DesactivarGrupoEstudio(grupoEstudioId)
 	if err != nil {
-		return requestresponse.APIResponseDTO(false, 404, nil, err.Error())
+		return requestresponse.APIResponseDTO(false, 500, nil, err.Error())
+	}
+
+	_, errDesasignar := helpers.DesasignarEspaciosAcademicosDeGrupoEstudio(grupoEstudioId)
+	if errDesasignar != nil {
+		return requestresponse.APIResponseDTO(false, 500, nil, errDesasignar.Error())
 	}
 
 	return requestresponse.APIResponseDTO(true, 200, nil, "delete success")
+}
+
+func CreateGrupoEstudio(grupoEstudio []byte) requestresponse.APIResponse {
+	var grupoEstudioMap map[string]interface{}
+	_ = json.Unmarshal(grupoEstudio, &grupoEstudioMap)
+
+	urlGrupoEstudioPost := beego.AppConfig.String("HorarioService") + "grupo-estudio"
+	var grupoEstudioPost map[string]interface{}
+	if err := request.SendJson(urlGrupoEstudioPost, "POST", &grupoEstudioPost, grupoEstudioMap); err != nil {
+		return requestresponse.APIResponseDTO(false, 500, nil, "Error en el servicio de horario", err.Error())
+	}
+
+	espaciosAcademicos := grupoEstudioMap["EspaciosAcademicos"].([]interface{})
+
+	_, err := helpers.AsignarEspaciosAcademicosAGrupoEstudio(grupoEstudioPost["Data"].(map[string]interface{})["_id"].(string), espaciosAcademicos)
+	if err != nil {
+		return requestresponse.APIResponseDTO(false, 500, nil, err.Error())
+	}
+
+	return requestresponse.APIResponseDTO(true, 200, grupoEstudioPost["Data"], "")
+}
+
+func UpdateGrupoEstudio(grupoEstudioId string, grupoEstudioEditar []byte) requestresponse.APIResponse {
+	_, errDesasignar := helpers.DesasignarEspaciosAcademicosDeGrupoEstudio(grupoEstudioId)
+	if errDesasignar != nil {
+		return requestresponse.APIResponseDTO(false, 500, nil, errDesasignar.Error())
+	}
+
+	var grupoEstudioMap map[string]interface{}
+	_ = json.Unmarshal(grupoEstudioEditar, &grupoEstudioMap)
+
+	urlGrupoEstudioPut := beego.AppConfig.String("HorarioService") + "grupo-estudio/" + grupoEstudioId
+	var grupoEstudioPut map[string]interface{}
+	if err := request.SendJson(urlGrupoEstudioPut, "PUT", &grupoEstudioPut, grupoEstudioMap); err != nil {
+		return requestresponse.APIResponseDTO(false, 500, nil, "Error en el servicio de horario", err.Error())
+	}
+
+	espaciosAcademicosAsigmar := grupoEstudioMap["EspaciosAcademicos"].([]interface{})
+
+	_, errAsignar := helpers.AsignarEspaciosAcademicosAGrupoEstudio(grupoEstudioId, espaciosAcademicosAsigmar)
+	if errAsignar != nil {
+		return requestresponse.APIResponseDTO(false, 500, nil, errAsignar.Error())
+	}
+
+	return requestresponse.APIResponseDTO(true, 200, grupoEstudioPut["Data"], "")
 }

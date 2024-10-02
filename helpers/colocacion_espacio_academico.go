@@ -165,22 +165,17 @@ func Contains(slice []interface{}, item string) bool {
 }
 
 func DesactivarColocacion(colocacionId string) (map[string]interface{}, error) {
-	urlColocacion := beego.AppConfig.String("HorarioService") + "colocacion-espacio-academico/" + colocacionId
-	var colocacion map[string]interface{}
-	if err := request.GetJson(urlColocacion, &colocacion); err != nil {
-		return nil, fmt.Errorf("error en el servicio horario: %v", err)
+	colocacion := map[string]interface{}{
+		"Activo": false,
 	}
-
-	colocacionData := colocacion["Data"].(map[string]interface{})
-	colocacionData["Activo"] = false
 
 	urlColocacionPut := beego.AppConfig.String("HorarioService") + "colocacion-espacio-academico/" + colocacionId
 	var colocacionPut map[string]interface{}
-	if err := request.SendJson(urlColocacionPut, "PUT", &colocacionPut, colocacionData); err != nil {
+	if err := request.SendJson(urlColocacionPut, "PUT", &colocacionPut, colocacion); err != nil {
 		return nil, fmt.Errorf("error en el servicio de horario: %v", err)
 	}
 
-	return colocacionData, nil
+	return colocacionPut["Data"].(map[string]interface{}), nil
 }
 
 func DesactivarCargaPlanSegunColocacion(colocacionId string) (map[string]interface{}, error) {
@@ -204,22 +199,17 @@ func DesactivarCargaPlanSegunColocacion(colocacionId string) (map[string]interfa
 }
 
 func DesactivarCargaPlan(cargaPlanId string) (map[string]interface{}, error) {
-	urlCargaPlan := beego.AppConfig.String("PlanDocenteService") + "carga_plan/" + cargaPlanId
-	var cargaPlan map[string]interface{}
-	if err := request.GetJson(urlCargaPlan, &cargaPlan); err != nil {
-		return nil, fmt.Errorf("error en el servicio plan docente: %v", err)
+	cargaPlan := map[string]interface{}{
+		"activo": false,
 	}
-
-	cargaPlanData := cargaPlan["Data"].(map[string]interface{})
-	cargaPlanData["activo"] = false
 
 	urlCargaPlanPut := beego.AppConfig.String("PlanDocenteService") + "carga_plan/" + cargaPlanId
 	var cargaPlanPut map[string]interface{}
-	if err := request.SendJson(urlCargaPlanPut, "PUT", &cargaPlanPut, cargaPlanData); err != nil {
+	if err := request.SendJson(urlCargaPlanPut, "PUT", &cargaPlanPut, cargaPlan); err != nil {
 		return nil, fmt.Errorf("error en el servicio de horario: %v", err)
 	}
 
-	return cargaPlanData, nil
+	return cargaPlanPut["Data"].(map[string]interface{}), nil
 }
 
 // haySobreposicion verifica si hay una superposición entre la colocación a poner
