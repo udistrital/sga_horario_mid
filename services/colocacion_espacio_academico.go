@@ -11,53 +11,6 @@ import (
 	"github.com/udistrital/utils_oas/requestresponse"
 )
 
-func GetColocacionesSegunGrupoEstudioYPeriodo(grupoEstudioId, periodoId string) requestresponse.APIResponse {
-	var colocacionesDeModuloPlanDocente []map[string]interface{}
-	var colocacionesDeModuloHorario []map[string]interface{}
-	var errPlanDocente, errHorario error
-
-	var wg sync.WaitGroup
-	wg.Add(2)
-
-	go func() {
-		defer wg.Done()
-		colocacionesDeModuloPlanDocente, errPlanDocente = helpers.GetColocacionesDeModuloPlanDocente(grupoEstudioId, periodoId)
-	}()
-
-	go func() {
-		defer wg.Done()
-		colocacionesDeModuloHorario, errHorario = helpers.GetColocacionesDeModuloHorario(grupoEstudioId)
-	}()
-
-	wg.Wait()
-
-	if errPlanDocente != nil {
-		return requestresponse.APIResponseDTO(false, 500, nil, errPlanDocente.Error())
-	}
-
-	if errHorario != nil {
-		return requestresponse.APIResponseDTO(false, 500, nil, errHorario.Error())
-	}
-
-	//en este se unen las colocaciones del modulo de plan docente y horario
-	colocacionesMap := make(map[string]map[string]interface{})
-
-	//Si una colocacion se repite se deja una, priorizando la del modulo de plan docente
-	for _, colocacion := range append(colocacionesDeModuloPlanDocente, colocacionesDeModuloHorario...) {
-		id, ok := colocacion["_id"].(string)
-		if ok && colocacion != nil && colocacionesMap[id] == nil {
-			colocacionesMap[id] = colocacion
-		}
-	}
-
-	colocaciones := make([]map[string]interface{}, 0, len(colocacionesMap))
-	for _, colocacion := range colocacionesMap {
-		colocaciones = append(colocaciones, colocacion)
-	}
-
-	return requestresponse.APIResponseDTO(true, 200, colocaciones, "")
-}
-
 // GetSobreposicionColocacion verifica si una colocación sobrepone a cualquier otra existente
 // con respecto al espacio fisico durante un período determinado.
 func GetSobreposicionColocacion(colocacionId, periodoId string) requestresponse.APIResponse {
@@ -94,4 +47,88 @@ func GetSobreposicionColocacion(colocacionId, periodoId string) requestresponse.
 	}
 
 	return requestresponse.APIResponseDTO(true, 200, colocacionSobrepuesta, "")
+}
+
+func GetColocacionesDeGrupoEstudio(grupoEstudioId, periodoId string) requestresponse.APIResponse {
+	colocacionesTotales, err := helpers.GetColocacionesDeGrupoEstudio(grupoEstudioId, periodoId)
+	if err != nil {
+		return requestresponse.APIResponseDTO(false, 500, nil, fmt.Sprintf("error en metodo GetColocacionesSegunGrupoEstudioYPeriodo: %v", err), err)
+	}
+
+	var wg sync.WaitGroup
+	errChan := make(chan error, len(colocacionesTotales))
+
+	for _, colocacion := range colocacionesTotales {
+		wg.Add(1)
+		go func(colocacion map[string]interface{}) {
+			defer wg.Done()
+			_, err := helpers.AgregarInfoAdicionalColocacion(colocacion)
+			if err != nil {
+				errChan <- err
+			}
+		}(colocacion.(map[string]interface{}))
+	}
+
+	wg.Wait()
+	close(errChan)
+
+	for err := range errChan {
+		if err != nil {
+			return requestresponse.APIResponseDTO(false, 500, nil, fmt.Sprintf("error en metodo AgregarInfoAdicionalColocacion: %v", err))
+		}
+	}
+
+	return requestresponse.APIResponseDTO(true, 200, colocacionesTotales, "")
+}
+
+func GetColocacionInfoAdicional(colocacionId string) requestresponse.APIResponse {
+	urlColocacion := beego.AppConfig.String("HorarioService") + "colocacion-espacio-academico/" + colocacionId
+	var colocacionEspacioAcademico map[string]interface{}
+	if err := request.GetJson(urlColocacion, &colocacionEspacioAcademico); err != nil {
+		return requestresponse.APIResponseDTO(false, 500, nil, "Error en el servicio horario"+err.Error())
+	}
+
+	colocacionInfoAdicional, err := helpers.AgregarInfoAdicionalColocacion(colocacionEspacioAcademico["Data"].(map[string]interface{}))
+	if err != nil {
+		return requestresponse.APIResponseDTO(false, 500, nil, err.Error())
+	}
+
+	return requestresponse.APIResponseDTO(true, 200, colocacionInfoAdicional, "")
+}
+
+func DeleteColocacionEspacioAcademico(colocacionId string) requestresponse.APIResponse {
+	_, errPlan := helpers.DesactivarCargaPlanSegunColocacion(colocacionId)
+	if errPlan != nil {
+		return requestresponse.APIResponseDTO(false, 500, nil, fmt.Sprintf("error en metodo DesactivarColocacion: %v", errPlan))
+	}
+
+	_, err := helpers.DesactivarColocacion(colocacionId)
+	if err != nil {
+		return requestresponse.APIResponseDTO(false, 500, nil, fmt.Sprintf("error en metodo DesactivarColocacion: %v", err))
+	}
+
+	return requestresponse.APIResponseDTO(true, 200, nil, "delete success")
+}
+
+func GetColocacionesGrupoSinDetalles(grupoEstudioId, periodoId string) requestresponse.APIResponse {
+	colocaciones, err := helpers.GetColocacionesDeGrupoEstudio(grupoEstudioId, periodoId)
+	if err != nil {
+		return requestresponse.APIResponseDTO(false, 500, nil, fmt.Sprintf("error en metodo GetColocacionesSegunGrupoEstudioYPeriodo: %v", err), err)
+	}
+
+	var colocacionesSinDetalles []map[string]interface{}
+	for _, colocacion := range colocaciones {
+		colocacionData, _ := colocacion.(map[string]interface{})
+
+		var colocacionEspacio map[string]interface{}
+		_ = json.Unmarshal([]byte(colocacionData["ColocacionEspacioAcademico"].(string)), &colocacionEspacio)
+
+		colocacionesSinDetalles = append(colocacionesSinDetalles, map[string]interface{}{
+			"_id":           colocacionData["_id"],
+			"horas":         int(colocacionEspacio["horas"].(float64)),
+			"finalPosition": colocacionEspacio["finalPosition"],
+			"horaFormato":   colocacionEspacio["horaFormato"],
+		})
+	}
+	return requestresponse.APIResponseDTO(true, 200, colocacionesSinDetalles, "")
 }
