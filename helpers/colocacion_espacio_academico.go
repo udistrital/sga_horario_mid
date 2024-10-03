@@ -11,7 +11,7 @@ import (
 	"github.com/udistrital/utils_oas/request"
 )
 
-func GetColocacionesSegunGrupoEstudioYPeriodo(grupoEstudioId, periodoId string) ([]interface{}, error) {
+func GetColocacionesDeGrupoEstudio(grupoEstudioId, periodoId string) ([]interface{}, error) {
 	urlGrupoEstudio := beego.AppConfig.String("HorarioService") + "grupo-estudio/" + grupoEstudioId
 	var resGrupoEstudio map[string]interface{}
 

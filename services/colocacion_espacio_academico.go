@@ -49,8 +49,8 @@ func GetSobreposicionColocacion(colocacionId, periodoId string) requestresponse.
 	return requestresponse.APIResponseDTO(true, 200, colocacionSobrepuesta, "")
 }
 
-func GetColocacionesSegunGrupoEstudioYPeriodo(grupoEstudioId, periodoId string) requestresponse.APIResponse {
-	colocacionesTotales, err := helpers.GetColocacionesSegunGrupoEstudioYPeriodo(grupoEstudioId, periodoId)
+func GetColocacionesDeGrupoEstudio(grupoEstudioId, periodoId string) requestresponse.APIResponse {
+	colocacionesTotales, err := helpers.GetColocacionesDeGrupoEstudio(grupoEstudioId, periodoId)
 	if err != nil {
 		return requestresponse.APIResponseDTO(false, 500, nil, fmt.Sprintf("error en metodo GetColocacionesSegunGrupoEstudioYPeriodo: %v", err), err)
 	}
@@ -108,4 +108,27 @@ func DeleteColocacionEspacioAcademico(colocacionId string) requestresponse.APIRe
 	}
 
 	return requestresponse.APIResponseDTO(true, 200, nil, "delete success")
+}
+
+func GetColocacionesGrupoSinDetalles(grupoEstudioId, periodoId string) requestresponse.APIResponse {
+	colocaciones, err := helpers.GetColocacionesDeGrupoEstudio(grupoEstudioId, periodoId)
+	if err != nil {
+		return requestresponse.APIResponseDTO(false, 500, nil, fmt.Sprintf("error en metodo GetColocacionesSegunGrupoEstudioYPeriodo: %v", err), err)
+	}
+
+	var colocacionesSinDetalles []map[string]interface{}
+	for _, colocacion := range colocaciones {
+		colocacionData, _ := colocacion.(map[string]interface{})
+
+		var colocacionEspacio map[string]interface{}
+		_ = json.Unmarshal([]byte(colocacionData["ColocacionEspacioAcademico"].(string)), &colocacionEspacio)
+
+		colocacionesSinDetalles = append(colocacionesSinDetalles, map[string]interface{}{
+			"_id":           colocacionData["_id"],
+			"horas":         int(colocacionEspacio["horas"].(float64)),
+			"finalPosition": colocacionEspacio["finalPosition"],
+			"horaFormato":   colocacionEspacio["horaFormato"],
+		})
+	}
+	return requestresponse.APIResponseDTO(true, 200, colocacionesSinDetalles, "")
 }

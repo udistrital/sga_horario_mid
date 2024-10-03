@@ -16,7 +16,7 @@ paths:
       tags:
       - colocacion-espacio-academico
       description: get colocaciones de espacios academicos segun id de grupo estudio y id del periodo
-      operationId: ColocacionEspacioAcademicoController.GetColocacionesSegunGrupoEstudioYPeriodo
+      operationId: ColocacionEspacioAcademicoController.GetColocacionesDeGrupoEstudio
       parameters:
       - in: query
         name: grupo-estudio-id
@@ -59,6 +59,26 @@ paths:
         name: id
         description: id de la colocacion
         required: true
+        type: string
+      responses:
+        "200":
+          description: '{}'
+        "403":
+          description: body is empty
+  /colocacion-espacio-academico/sin-detalles:
+    get:
+      tags:
+      - colocacion-espacio-academico
+      description: get colocaciones de espacios academicos segun id de grupo estudio y id del periodo
+      operationId: ColocacionEspacioAcademicoController.GetColocacionesSinInfoAdicionalDeGrupoEstudio
+      parameters:
+      - in: query
+        name: grupo-estudio-id
+        description: 'Se recibe parametro: id del grupo estudio'
+        type: string
+      - in: query
+        name: periodo-id
+        description: 'Se recibe parametro: id del periodo'
         type: string
       responses:
         "200":

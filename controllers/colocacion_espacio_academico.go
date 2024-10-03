@@ -13,26 +13,27 @@ type ColocacionEspacioAcademicoController struct {
 
 // URLMapping ...
 func (c *ColocacionEspacioAcademicoController) URLMapping() {
-	c.Mapping("GetColocacionesSegunGrupoEstudioYPeriodo", c.GetColocacionesSegunGrupoEstudioYPeriodo)
+	c.Mapping("GetColocacionesDeGrupoEstudio", c.GetColocacionesDeGrupoEstudio)
 	c.Mapping("GetSobreposicionColocacion", c.GetSobreposicionColocacion)
-	c.Mapping("GetSobreposicionColocacion", c.GetColocacionInfoAdicional)
+	c.Mapping("GetColocacionInfoAdicional", c.GetColocacionInfoAdicional)
 	c.Mapping("DeleteColocacionEspacioAcademico", c.DeleteColocacionEspacioAcademico)
+	c.Mapping("GetColocacionesGrupoSinDetalles", c.GetColocacionesGrupoSinDetalles)
 }
 
-// @Title GetColocacionesSegunGrupoEstudioYPeriodo
+// @Title GetColocacionesDeGrupoEstudio
 // @Description get colocaciones de espacios academicos segun id de grupo estudio y id del periodo
 // @Param	grupo-estudio-id	query	string	false	"Se recibe parametro: id del grupo estudio"
 // @Param	periodo-id	query	string	false	"Se recibe parametro: id del periodo"
 // @Success 200 {}
 // @Failure 403 body is empty
 // @router / [get]
-func (c *ColocacionEspacioAcademicoController) GetColocacionesSegunGrupoEstudioYPeriodo() {
+func (c *ColocacionEspacioAcademicoController) GetColocacionesDeGrupoEstudio() {
 	defer errorhandler.HandlePanic(&c.Controller)
 
 	grupoEstudioId := c.GetString("grupo-estudio-id")
 	periodoId := c.GetString("periodo-id")
 
-	respuesta := services.GetColocacionesSegunGrupoEstudioYPeriodo(grupoEstudioId, periodoId)
+	respuesta := services.GetColocacionesDeGrupoEstudio(grupoEstudioId, periodoId)
 
 	c.Ctx.Output.SetStatus(respuesta.Status)
 
@@ -98,6 +99,28 @@ func (c *ColocacionEspacioAcademicoController) DeleteColocacionEspacioAcademico(
 
 	c.Ctx.Output.SetStatus(respuesta.Status)
 	c.Data["json"] = respuesta
+	c.ServeJSON()
+}
+
+// @Title GetColocacionesSinInfoAdicionalDeGrupoEstudio
+// @Description get colocaciones de espacios academicos segun id de grupo estudio y id del periodo
+// @Param	grupo-estudio-id	query	string	false	"Se recibe parametro: id del grupo estudio"
+// @Param	periodo-id	query	string	false	"Se recibe parametro: id del periodo"
+// @Success 200 {}
+// @Failure 403 body is empty
+// @router /sin-detalles [get]
+func (c *ColocacionEspacioAcademicoController) GetColocacionesGrupoSinDetalles() {
+	defer errorhandler.HandlePanic(&c.Controller)
+
+	grupoEstudioId := c.GetString("grupo-estudio-id")
+	periodoId := c.GetString("periodo-id")
+
+	respuesta := services.GetColocacionesGrupoSinDetalles(grupoEstudioId, periodoId)
+
+	c.Ctx.Output.SetStatus(respuesta.Status)
+
+	c.Data["json"] = respuesta
+
 	c.ServeJSON()
 }
 
