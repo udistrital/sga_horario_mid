@@ -8,22 +8,17 @@ import (
 )
 
 func DesactivarGrupoEstudio(grupoEstudioId string) (map[string]interface{}, error) {
-	var grupoEstudio map[string]interface{}
-	urlGrupoEstudio := beego.AppConfig.String("HorarioService") + "grupo-estudio/" + grupoEstudioId
-	if err := request.GetJson(urlGrupoEstudio, &grupoEstudio); err != nil {
-		return nil, fmt.Errorf("error en el servicio horario: %v", err)
+	grupoEstudio := map[string]interface{}{
+		"Activo": false,
 	}
 
-	grupoEstudioData := grupoEstudio["Data"].(map[string]interface{})
-	grupoEstudioData["Activo"] = false
-
-	urlGrupoEstudioPost := beego.AppConfig.String("HorarioService") + "grupo-estudio/" + grupoEstudioData["_id"].(string)
-	var colocacionPost map[string]interface{}
-	if err := request.SendJson(urlGrupoEstudioPost, "PUT", &colocacionPost, grupoEstudioData); err != nil {
+	urlGrupoEstudioPut := beego.AppConfig.String("HorarioService") + "grupo-estudio/" + grupoEstudioId
+	var grupoEstudioPut map[string]interface{}
+	if err := request.SendJson(urlGrupoEstudioPut, "PUT", &grupoEstudioPut, grupoEstudio); err != nil {
 		return nil, fmt.Errorf("error en el servicio de horario: %v", err)
 	}
 
-	return grupoEstudio, nil
+	return grupoEstudioPut["Data"].(map[string]interface{}), nil
 }
 
 func ObtenerEspacioAcademicoSegunId(espacioId string) (map[string]interface{}, error) {
@@ -40,4 +35,43 @@ func ObtenerEspacioAcademicoSegunId(espacioId string) (map[string]interface{}, e
 		}
 	}
 	return nil, fmt.Errorf("no se encontró el espacio académico con el ID %s", espacioId)
+}
+
+func AsignarEspaciosAcademicosAGrupoEstudio(grupoEstudioId string, espaciosAcademicos []interface{}) (map[string]interface{}, error) {
+	for _, espacioId := range espaciosAcademicos {
+		espacioAsignarGrupoEstudio := map[string]interface{}{
+			"grupo_estudio_id": grupoEstudioId,
+		}
+
+		urlGrupoEstudioPut := beego.AppConfig.String("EspaciosAcademicosService") + "espacio-academico/" + espacioId.(string)
+		var colocacionPut map[string]interface{}
+		if err := request.SendJson(urlGrupoEstudioPut, "PUT", &colocacionPut, espacioAsignarGrupoEstudio); err != nil {
+			return nil, err
+		}
+	}
+
+	return nil, nil
+}
+
+func DesasignarEspaciosAcademicosDeGrupoEstudio(grupoEstudioId string) (map[string]interface{}, error) {
+	urlGrupoEstudio := beego.AppConfig.String("HorarioService") + "grupo-estudio/" + grupoEstudioId
+	var grupoEstudio map[string]interface{}
+	if err := request.GetJson(urlGrupoEstudio, &grupoEstudio); err != nil {
+		return nil, fmt.Errorf("error en servicio de horarios" + err.Error())
+	}
+
+	espaciosParaDesasignar := grupoEstudio["Data"].(map[string]interface{})["EspaciosAcademicos"].([]interface{})
+	for _, espacioId := range espaciosParaDesasignar {
+		espacioAsignarGrupoEstudio := map[string]interface{}{
+			"grupo_estudio_id": "0",
+		}
+
+		urlGrupoEstudioPut := beego.AppConfig.String("EspaciosAcademicosService") + "espacio-academico/" + espacioId.(string)
+		var colocacionPut map[string]interface{}
+		if err := request.SendJson(urlGrupoEstudioPut, "PUT", &colocacionPut, espacioAsignarGrupoEstudio); err != nil {
+			return nil, err
+		}
+	}
+
+	return nil, nil
 }

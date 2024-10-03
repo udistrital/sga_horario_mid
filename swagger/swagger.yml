@@ -11,18 +11,275 @@ info:
     url: http://www.apache.org/licenses/LICENSE-2.0.html
 basePath: /v1
 paths:
-  /grupo-estudio/getAll:
+  /colocacion-espacio-academico/:
     get:
       tags:
-      - grupo-estudio
-      description: get events
-      operationId: GrupoEstudioController.getGrupoEstudio
+      - colocacion-espacio-academico
+      description: get colocaciones de espacios academicos segun id de grupo estudio y id del periodo
+      operationId: ColocacionEspacioAcademicoController.GetColocacionesDeGrupoEstudio
+      parameters:
+      - in: query
+        name: grupo-estudio-id
+        description: 'Se recibe parametro: id del grupo estudio'
+        type: string
+      - in: query
+        name: periodo-id
+        description: 'Se recibe parametro: id del periodo'
+        type: string
       responses:
         "200":
           description: '{}'
         "403":
           description: body is empty
+  /colocacion-espacio-academico/{id}:
+    delete:
+      tags:
+      - colocacion-espacio-academico
+      description: delete colocacion espacio academico (delete carga plan si tiene)
+      operationId: ColocacionEspacioAcademicoController.deleteGrupoEstudio
+      parameters:
+      - in: path
+        name: id
+        description: colocacion espacio academico id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: '{string} delete success!'
+        "404":
+          description: not found resource
+  /colocacion-espacio-academico/info-adicional/{id}:
+    get:
+      tags:
+      - colocacion-espacio-academico
+      description: obtiene la colocacion con mas datos sobre la misma
+      operationId: ColocacionEspacioAcademicoController.GetColocacionInfoAdicional
+      parameters:
+      - in: path
+        name: id
+        description: id de la colocacion
+        required: true
+        type: string
+      responses:
+        "200":
+          description: '{}'
+        "403":
+          description: body is empty
+  /colocacion-espacio-academico/sin-detalles:
+    get:
+      tags:
+      - colocacion-espacio-academico
+      description: get colocaciones de espacios academicos segun id de grupo estudio y id del periodo
+      operationId: ColocacionEspacioAcademicoController.GetColocacionesSinInfoAdicionalDeGrupoEstudio
+      parameters:
+      - in: query
+        name: grupo-estudio-id
+        description: 'Se recibe parametro: id del grupo estudio'
+        type: string
+      - in: query
+        name: periodo-id
+        description: 'Se recibe parametro: id del periodo'
+        type: string
+      responses:
+        "200":
+          description: '{}'
+        "403":
+          description: body is empty
+  /colocacion-espacio-academico/sobreposicion:
+    get:
+      tags:
+      - colocacion-espacio-academico
+      description: get si hay una colocacion puesta en donde se quiere poner otra
+      operationId: ColocacionEspacioAcademicoController.GetSobreposicionColocacion
+      parameters:
+      - in: query
+        name: colocacion-id
+        description: 'Se recibe parametro: id de la colocacion'
+        type: string
+      - in: query
+        name: periodo-id
+        description: 'Se recibe parametro: id del periodo'
+        type: string
+      responses:
+        "200":
+          description: '{}'
+        "403":
+          description: body is empty
+  /docente/pre-asignacion:
+    get:
+      tags:
+      - docente
+      description: get preasignaciones de docente segun el periodo
+      operationId: DocenteController.getPreasignacionesSegunDocenteYPeriodo
+      parameters:
+      - in: query
+        name: docente-id
+        description: 'Se recibe parametro: id del docente'
+        type: string
+      - in: query
+        name: periodo-id
+        description: 'Se recibe parametro: ide del periodo'
+        type: string
+      responses:
+        "200":
+          description: '{}'
+        "403":
+          description: body is empty
+  /docente/vinculaciones:
+    get:
+      tags:
+      - docente
+      description: get docente y sus vinculaciones por documento
+      operationId: DocenteController.GetDocenteYVincuaciones
+      parameters:
+      - in: query
+        name: documento
+        description: 'Se recibe parametro: documento del docente'
+        type: string
+      responses:
+        "200":
+          description: '{}'
+        "403":
+          description: body is empty
+  /espacio-fisico/ocupados:
+    get:
+      tags:
+      - espacio-fisico
+      description: get espacios ocupacdos de un espacio fisico segun el periodo
+      operationId: EspacioFisicoController.GetEspaciosOCupadoSegunPeriodo
+      parameters:
+      - in: query
+        name: espacio-fisico-id
+        description: 'Se recibe parametro: id del espacio fisico'
+        type: string
+      - in: query
+        name: periodo-id
+        description: 'Se recibe parametro: id del periodo'
+        type: string
+      responses:
+        "200":
+          description: '{}'
+        "403":
+          description: body is empty
+  /grupo-estudio/:
+    get:
+      tags:
+      - grupo-estudio
+      description: get grupos de estudio segun horario y semestre
+      operationId: GrupoEstudioController.getGrupoEstudioSegunHorarioYSemestre
+      parameters:
+      - in: query
+        name: horario-id
+        description: 'Se recibe parametro: id del horario'
+        required: true
+        type: string
+      - in: query
+        name: semestre-id
+        description: 'Se recibe parametro: id del semestre'
+        required: true
+        type: string
+      responses:
+        "200":
+          description: '{}'
+        "403":
+          description: body is empty
+    post:
+      tags:
+      - grupo-estudio
+      description: create grupo de estudio
+      operationId: GrupoEstudioController.PostGrupoEstudio
+      parameters:
+      - in: body
+        name: body
+        description: body
+        required: true
+        schema:
+          $ref: '#/definitions/{}'
+      responses:
+        "200":
+          description: '{}'
+        "400":
+          description: the request contains incorrect syntax
+  /grupo-estudio/{id}:
+    put:
+      tags:
+      - grupo-estudio
+      description: Update grupo de estudio
+      operationId: GrupoEstudioController.PutGrupoEstudio
+      parameters:
+      - in: path
+        name: id
+        description: grupo de estudio id
+        required: true
+        type: string
+      - in: body
+        name: body
+        description: body
+        required: true
+        schema:
+          $ref: '#/definitions/{}'
+      responses:
+        "200":
+          description: '{}'
+        "400":
+          description: the request contains incorrect syntax
+    delete:
+      tags:
+      - grupo-estudio
+      description: delete grupo estudio
+      operationId: GrupoEstudioController.deleteGrupoEstudio
+      parameters:
+      - in: path
+        name: id
+        description: grupo de estudio id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: '{string} delete success!'
+        "404":
+          description: not found resource
+  /horario/calendario:
+    get:
+      tags:
+      - horario
+      description: Obtener si hay eventos de calendario para hacer acciones con el modulo de horario
+      operationId: HorarioController.GetActividadesParaHorarioYPlanDocente
+      parameters:
+      - in: query
+        name: periodo-id
+        description: 'Se recibe parametro: id del periodo'
+        type: string
+      - in: query
+        name: nivel-id
+        description: 'Se recibe parametro: id del nivel'
+        type: string
+      - in: query
+        name: dependencia-id
+        description: 'Se recibe parametro: id del dependecia'
+        type: string
+      responses:
+        "200":
+          description: '{}'
+        "403":
+          description: body is empty
+definitions:
+  '{}':
+    title: '{}'
+    type: object
 tags:
+- name: colocacion-espacio-academico
+  description: |
+    Operations about GruposEstudio
+- name: espacio-fisico
+  description: |
+    Operations about GruposEstudio
+- name: docente
+  description: |
+    Operations about GruposEstudio
 - name: grupo-estudio
+  description: |
+    Operations about GruposEstudio
+- name: horario
   description: |
     Operations about GruposEstudio
