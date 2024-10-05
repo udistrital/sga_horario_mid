@@ -289,3 +289,36 @@ func ObtenerMinutosDeRangoHora(rangoHora string) (inicio, fin int, err error) {
 
 	return inicio, fin, nil
 }
+
+// VerificarSobreposicionEnColocaciones
+//
+// verifica si una colocacion se sobrepone a alguna de una lista de colocaciones
+func VerificarSobreposicionEnColocaciones(colocacion map[string]interface{}, colocaciones []interface{}) (map[string]interface{}, error) {
+	var colocacionVerificar map[string]interface{}
+	_ = json.Unmarshal([]byte(colocacion["ColocacionEspacioAcademico"].(string)), &colocacionVerificar)
+
+	colocacionSobrepuesta := map[string]interface{}{"sobrepuesta": false}
+
+	for _, colocacion := range colocaciones {
+		colocacionMap := colocacion.(map[string]interface{})
+		var colocacionOcupada map[string]interface{}
+		_ = json.Unmarshal([]byte(colocacionMap["ColocacionEspacioAcademico"].(string)), &colocacionOcupada)
+
+		if HaySobreposicion(colocacionVerificar, colocacionOcupada) {
+			urlColocacion := beego.AppConfig.String("HorarioService") + "colocacion-espacio-academico/" + colocacionMap["_id"].(string)
+			if err := request.GetJson(urlColocacion, &colocacion); err != nil {
+				return nil, fmt.Errorf("error en servicio horario: %v", err)
+			}
+
+			colocacionMap["EspacioAcademico"], _ = ObtenerEspacioAcademicoSegunId(colocacionMap["EspacioAcademicoId"].(string))
+
+			colocacionSobrepuesta = map[string]interface{}{
+				"sobrepuesta":         true,
+				"colocacionConflicto": colocacionMap,
+			}
+			break
+		}
+	}
+
+	return colocacionSobrepuesta, nil
+}

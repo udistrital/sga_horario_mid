@@ -18,6 +18,7 @@ func (c *ColocacionEspacioAcademicoController) URLMapping() {
 	c.Mapping("GetColocacionInfoAdicional", c.GetColocacionInfoAdicional)
 	c.Mapping("DeleteColocacionEspacioAcademico", c.DeleteColocacionEspacioAcademico)
 	c.Mapping("GetColocacionesGrupoSinDetalles", c.GetColocacionesGrupoSinDetalles)
+	c.Mapping("GetSobreposicionEnGrupoEstudio", c.GetSobreposicionEnGrupoEstudio)
 }
 
 // @Title GetColocacionesDeGrupoEstudio
@@ -116,6 +117,30 @@ func (c *ColocacionEspacioAcademicoController) GetColocacionesGrupoSinDetalles()
 	periodoId := c.GetString("periodo-id")
 
 	respuesta := services.GetColocacionesGrupoSinDetalles(grupoEstudioId, periodoId)
+
+	c.Ctx.Output.SetStatus(respuesta.Status)
+
+	c.Data["json"] = respuesta
+
+	c.ServeJSON()
+}
+
+// @Title GetSobreposicionEnGrupoEstudio
+// @Description Obtiene si una colocación se sobrepone a alguna colocación del grupo de estudio
+// @Param	grupo-estudio-id	query	string	false	"Se recibe parametro: id del grupo de estudio"
+// @Param	periodo-id			query	string	false	"Se recibe parametro: id del periodo del grupo de estudio"
+// @Param	colocacion-id		query	string	false	"Se recibe parametro: id de la colocacion"
+// @Success 200 {}
+// @Failure 403 body is empty
+// @router /grupo-estudio/sobreposicion [get]
+func (c *ColocacionEspacioAcademicoController) GetSobreposicionEnGrupoEstudio() {
+	defer errorhandler.HandlePanic(&c.Controller)
+
+	grupoEstudioId := c.GetString("grupo-estudio-id")
+	periodoId := c.GetString("periodo-id")
+	colocacionId := c.GetString("colocacion-id")
+
+	respuesta := services.GetSobreposicionEnGrupoEstudio(grupoEstudioId, periodoId, colocacionId)
 
 	c.Ctx.Output.SetStatus(respuesta.Status)
 

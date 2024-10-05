@@ -113,7 +113,7 @@ func DeleteColocacionEspacioAcademico(colocacionId string) requestresponse.APIRe
 func GetColocacionesGrupoSinDetalles(grupoEstudioId, periodoId string) requestresponse.APIResponse {
 	colocaciones, err := helpers.GetColocacionesDeGrupoEstudio(grupoEstudioId, periodoId)
 	if err != nil {
-		return requestresponse.APIResponseDTO(false, 500, nil, fmt.Sprintf("error en metodo GetColocacionesSegunGrupoEstudioYPeriodo: %v", err), err)
+		return requestresponse.APIResponseDTO(false, 500, nil, fmt.Sprintf("error en metodo GetColocacionesDeGrupoEstudio: %v", err), err)
 	}
 
 	var colocacionesSinDetalles []map[string]interface{}
@@ -131,4 +131,25 @@ func GetColocacionesGrupoSinDetalles(grupoEstudioId, periodoId string) requestre
 		})
 	}
 	return requestresponse.APIResponseDTO(true, 200, colocacionesSinDetalles, "")
+}
+
+// Obtiene si una colocación se sobrepone a alguna colocación del grupo de estudio
+func GetSobreposicionEnGrupoEstudio(grupoEstudioId, periodoId, colocacionId string) requestresponse.APIResponse {
+	colocacionesGrupoEstudio, err := helpers.GetColocacionesDeGrupoEstudio(grupoEstudioId, periodoId)
+	if err != nil {
+		return requestresponse.APIResponseDTO(false, 500, nil, fmt.Sprintf("error en metodo GetColocacionesDeGrupoEstudio: %v", err), err)
+	}
+
+	urlColocacion := beego.AppConfig.String("HorarioService") + "colocacion-espacio-academico/" + colocacionId
+	var colocacionEspacioAcademico map[string]interface{}
+	if err := request.GetJson(urlColocacion, &colocacionEspacioAcademico); err != nil {
+		return requestresponse.APIResponseDTO(false, 500, nil, fmt.Sprintf("error en el servicio horario: %v", err), err)
+	}
+
+	colocacionSobrepuesta, err := helpers.VerificarSobreposicionEnColocaciones(colocacionEspacioAcademico["Data"].(map[string]interface{}), colocacionesGrupoEstudio)
+	if err != nil {
+		return requestresponse.APIResponseDTO(false, 500, nil, fmt.Sprintf("error en VerificarSobreposicion: %v", err), err)
+	}
+
+	return requestresponse.APIResponseDTO(true, 200, colocacionSobrepuesta, "")
 }
