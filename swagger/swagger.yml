@@ -48,6 +48,50 @@ paths:
           description: '{string} delete success!'
         "404":
           description: not found resource
+  /colocacion-espacio-academico/espacio-fisico/sobreposicion:
+    get:
+      tags:
+      - colocacion-espacio-academico
+      description: get si hay una colocacion puesta en donde se quiere poner otra segun el espacio fisico
+      operationId: ColocacionEspacioAcademicoController.GetSobreposicionEspacioFisico
+      parameters:
+      - in: query
+        name: colocacion-id
+        description: 'Se recibe parametro: id de la colocacion'
+        type: string
+      - in: query
+        name: periodo-id
+        description: 'Se recibe parametro: id del periodo'
+        type: string
+      responses:
+        "200":
+          description: '{}'
+        "403":
+          description: body is empty
+  /colocacion-espacio-academico/grupo-estudio/sobreposicion:
+    get:
+      tags:
+      - colocacion-espacio-academico
+      description: Obtiene si una colocación se sobrepone a alguna colocación del grupo de estudio
+      operationId: ColocacionEspacioAcademicoController.GetSobreposicionEnGrupoEstudio
+      parameters:
+      - in: query
+        name: grupo-estudio-id
+        description: 'Se recibe parametro: id del grupo de estudio'
+        type: string
+      - in: query
+        name: periodo-id
+        description: 'Se recibe parametro: id del periodo del grupo de estudio'
+        type: string
+      - in: query
+        name: colocacion-id
+        description: 'Se recibe parametro: id de la colocacion'
+        type: string
+      responses:
+        "200":
+          description: '{}'
+        "403":
+          description: body is empty
   /colocacion-espacio-academico/info-adicional/{id}:
     get:
       tags:
@@ -75,26 +119,6 @@ paths:
       - in: query
         name: grupo-estudio-id
         description: 'Se recibe parametro: id del grupo estudio'
-        type: string
-      - in: query
-        name: periodo-id
-        description: 'Se recibe parametro: id del periodo'
-        type: string
-      responses:
-        "200":
-          description: '{}'
-        "403":
-          description: body is empty
-  /colocacion-espacio-academico/sobreposicion:
-    get:
-      tags:
-      - colocacion-espacio-academico
-      description: get si hay una colocacion puesta en donde se quiere poner otra
-      operationId: ColocacionEspacioAcademicoController.GetSobreposicionColocacion
-      parameters:
-      - in: query
-        name: colocacion-id
-        description: 'Se recibe parametro: id de la colocacion'
         type: string
       - in: query
         name: periodo-id

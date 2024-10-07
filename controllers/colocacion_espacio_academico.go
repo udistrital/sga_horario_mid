@@ -14,11 +14,11 @@ type ColocacionEspacioAcademicoController struct {
 // URLMapping ...
 func (c *ColocacionEspacioAcademicoController) URLMapping() {
 	c.Mapping("GetColocacionesDeGrupoEstudio", c.GetColocacionesDeGrupoEstudio)
-	c.Mapping("GetSobreposicionColocacion", c.GetSobreposicionColocacion)
 	c.Mapping("GetColocacionInfoAdicional", c.GetColocacionInfoAdicional)
 	c.Mapping("DeleteColocacionEspacioAcademico", c.DeleteColocacionEspacioAcademico)
 	c.Mapping("GetColocacionesGrupoSinDetalles", c.GetColocacionesGrupoSinDetalles)
 	c.Mapping("GetSobreposicionEnGrupoEstudio", c.GetSobreposicionEnGrupoEstudio)
+	c.Mapping("GetSobreposicionEspacioFisico", c.GetSobreposicionEspacioFisico)
 }
 
 // @Title GetColocacionesDeGrupoEstudio
@@ -35,28 +35,6 @@ func (c *ColocacionEspacioAcademicoController) GetColocacionesDeGrupoEstudio() {
 	periodoId := c.GetString("periodo-id")
 
 	respuesta := services.GetColocacionesDeGrupoEstudio(grupoEstudioId, periodoId)
-
-	c.Ctx.Output.SetStatus(respuesta.Status)
-
-	c.Data["json"] = respuesta
-
-	c.ServeJSON()
-}
-
-// @Title GetSobreposicionColocacion
-// @Description get si hay una colocacion puesta en donde se quiere poner otra
-// @Param	colocacion-id	query	string	false	"Se recibe parametro: id de la colocacion"
-// @Param	periodo-id	query	string	false	"Se recibe parametro: id del periodo"
-// @Success 200 {}
-// @Failure 403 body is empty
-// @router /sobreposicion [get]
-func (c *ColocacionEspacioAcademicoController) GetSobreposicionColocacion() {
-	defer errorhandler.HandlePanic(&c.Controller)
-
-	colocacionId := c.GetString("colocacion-id")
-	periodoId := c.GetString("periodo-id")
-
-	respuesta := services.GetSobreposicionColocacion(colocacionId, periodoId)
 
 	c.Ctx.Output.SetStatus(respuesta.Status)
 
@@ -141,6 +119,28 @@ func (c *ColocacionEspacioAcademicoController) GetSobreposicionEnGrupoEstudio() 
 	colocacionId := c.GetString("colocacion-id")
 
 	respuesta := services.GetSobreposicionEnGrupoEstudio(grupoEstudioId, periodoId, colocacionId)
+
+	c.Ctx.Output.SetStatus(respuesta.Status)
+
+	c.Data["json"] = respuesta
+
+	c.ServeJSON()
+}
+
+// @Title GetSobreposicionEspacioFisico
+// @Description get si hay una colocacion puesta en donde se quiere poner otra segun el espacio fisico
+// @Param	colocacion-id	query	string	false	"Se recibe parametro: id de la colocacion"
+// @Param	periodo-id	query	string	false	"Se recibe parametro: id del periodo"
+// @Success 200 {}
+// @Failure 403 body is empty
+// @router /espacio-fisico/sobreposicion [get]
+func (c *ColocacionEspacioAcademicoController) GetSobreposicionEspacioFisico() {
+	defer errorhandler.HandlePanic(&c.Controller)
+
+	colocacionId := c.GetString("colocacion-id")
+	periodoId := c.GetString("periodo-id")
+
+	respuesta := services.GetSobreposicionEspacioFisico(colocacionId, periodoId)
 
 	c.Ctx.Output.SetStatus(respuesta.Status)
 

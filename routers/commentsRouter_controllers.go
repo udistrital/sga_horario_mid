@@ -27,6 +27,15 @@ func init() {
 
     beego.GlobalControllerRouter["github.com/udistrital/sga_horario_mid/controllers:ColocacionEspacioAcademicoController"] = append(beego.GlobalControllerRouter["github.com/udistrital/sga_horario_mid/controllers:ColocacionEspacioAcademicoController"],
         beego.ControllerComments{
+            Method: "GetSobreposicionEspacioFisico",
+            Router: "/espacio-fisico/sobreposicion",
+            AllowHTTPMethods: []string{"get"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
+    beego.GlobalControllerRouter["github.com/udistrital/sga_horario_mid/controllers:ColocacionEspacioAcademicoController"] = append(beego.GlobalControllerRouter["github.com/udistrital/sga_horario_mid/controllers:ColocacionEspacioAcademicoController"],
+        beego.ControllerComments{
             Method: "GetSobreposicionEnGrupoEstudio",
             Router: "/grupo-estudio/sobreposicion",
             AllowHTTPMethods: []string{"get"},
@@ -47,15 +56,6 @@ func init() {
         beego.ControllerComments{
             Method: "GetColocacionesGrupoSinDetalles",
             Router: "/sin-detalles",
-            AllowHTTPMethods: []string{"get"},
-            MethodParams: param.Make(),
-            Filters: nil,
-            Params: nil})
-
-    beego.GlobalControllerRouter["github.com/udistrital/sga_horario_mid/controllers:ColocacionEspacioAcademicoController"] = append(beego.GlobalControllerRouter["github.com/udistrital/sga_horario_mid/controllers:ColocacionEspacioAcademicoController"],
-        beego.ControllerComments{
-            Method: "GetSobreposicionColocacion",
-            Router: "/sobreposicion",
             AllowHTTPMethods: []string{"get"},
             MethodParams: param.Make(),
             Filters: nil,

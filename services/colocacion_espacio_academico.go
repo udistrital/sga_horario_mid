@@ -11,9 +11,9 @@ import (
 	"github.com/udistrital/utils_oas/requestresponse"
 )
 
-// GetSobreposicionColocacion verifica si una colocación sobrepone a cualquier otra existente
+// GetSobreposicionEspacioFisico verifica si una colocación sobrepone a cualquier otra existente
 // con respecto al espacio fisico durante un período determinado.
-func GetSobreposicionColocacion(colocacionId, periodoId string) requestresponse.APIResponse {
+func GetSobreposicionEspacioFisico(colocacionId, periodoId string) requestresponse.APIResponse {
 	urlColocacion := beego.AppConfig.String("HorarioService") + "colocacion-espacio-academico/" + colocacionId
 	var colocacionEspacioAcademico map[string]interface{}
 	if err := request.GetJson(urlColocacion, &colocacionEspacioAcademico); err != nil {
@@ -37,6 +37,7 @@ func GetSobreposicionColocacion(colocacionId, periodoId string) requestresponse.
 			}
 
 			espacioOcupado = espacioOcupado["Data"].(map[string]interface{})
+			_ = helpers.GetSedeEdificioSalon(espacioOcupado)
 
 			colocacionSobrepuesta = map[string]interface{}{
 				"sobrepuesta":         true,
