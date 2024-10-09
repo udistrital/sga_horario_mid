@@ -343,6 +343,34 @@
                 }
             }
         },
+        "/grupo-estudio/espacio-academico": {
+            "post": {
+                "tags": [
+                    "grupo-estudio"
+                ],
+                "description": "create espacio academico modificando el grupo de estudio",
+                "operationId": "GrupoEstudioController.PostEspacioAcademico",
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/{}"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{}"
+                    },
+                    "400": {
+                        "description": "the request contains incorrect syntax"
+                    }
+                }
+            }
+        },
         "/grupo-estudio/{id}": {
             "put": {
                 "tags": [

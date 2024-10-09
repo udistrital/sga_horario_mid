@@ -124,6 +124,15 @@ func init() {
             Filters: nil,
             Params: nil})
 
+    beego.GlobalControllerRouter["github.com/udistrital/sga_horario_mid/controllers:GrupoEstudioController"] = append(beego.GlobalControllerRouter["github.com/udistrital/sga_horario_mid/controllers:GrupoEstudioController"],
+        beego.ControllerComments{
+            Method: "PostEspacioAcademico",
+            Router: "/espacio-academico",
+            AllowHTTPMethods: []string{"post"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
     beego.GlobalControllerRouter["github.com/udistrital/sga_horario_mid/controllers:HorarioController"] = append(beego.GlobalControllerRouter["github.com/udistrital/sga_horario_mid/controllers:HorarioController"],
         beego.ControllerComments{
             Method: "GetActividadesParaHorarioYPlanDocente",

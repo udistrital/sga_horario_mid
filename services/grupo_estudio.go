@@ -83,7 +83,7 @@ func CreateGrupoEstudio(grupoEstudio []byte) requestresponse.APIResponse {
 
 	espaciosAcademicos := grupoEstudioMap["EspaciosAcademicos"].([]interface{})
 
-	_, err := helpers.AsignarEspaciosAcademicosAGrupoEstudio(grupoEstudioPost["Data"].(map[string]interface{})["_id"].(string), espaciosAcademicos)
+	_, err := helpers.AsignarGrupoEstudioAEspaciosAcademicos(grupoEstudioPost["Data"].(map[string]interface{})["_id"].(string), espaciosAcademicos)
 	if err != nil {
 		return requestresponse.APIResponseDTO(false, 500, nil, err.Error())
 	}
@@ -108,10 +108,31 @@ func UpdateGrupoEstudio(grupoEstudioId string, grupoEstudioEditar []byte) reques
 
 	espaciosAcademicosAsigmar := grupoEstudioMap["EspaciosAcademicos"].([]interface{})
 
-	_, errAsignar := helpers.AsignarEspaciosAcademicosAGrupoEstudio(grupoEstudioId, espaciosAcademicosAsigmar)
+	_, errAsignar := helpers.AsignarGrupoEstudioAEspaciosAcademicos(grupoEstudioId, espaciosAcademicosAsigmar)
 	if errAsignar != nil {
 		return requestresponse.APIResponseDTO(false, 500, nil, errAsignar.Error())
 	}
 
 	return requestresponse.APIResponseDTO(true, 200, grupoEstudioPut["Data"], "")
+}
+
+func CreateEspacioAcademico(espacioAcademico []byte) requestresponse.APIResponse {
+	var espacioAcademicoMap map[string]interface{}
+	_ = json.Unmarshal(espacioAcademico, &espacioAcademicoMap)
+
+	urlEspacioAcademicoPost := beego.AppConfig.String("EspaciosAcademicosService") + "espacio-academico"
+	var espacioAcademicoPost map[string]interface{}
+	if err := request.SendJson(urlEspacioAcademicoPost, "POST", &espacioAcademicoPost, espacioAcademicoMap); err != nil {
+		return requestresponse.APIResponseDTO(false, 500, nil, "Error en el servicio de espacios academios", err.Error())
+	}
+
+	espacioCreadoId := espacioAcademicoPost["Data"].(map[string]interface{})["_id"]
+	grupoEstudioId := espacioAcademicoMap["grupo_estudio_id"]
+
+	grupoEditado, errAsignar := helpers.AsignarEspacioAcademicoAGrupoEstudio(espacioCreadoId.(string), grupoEstudioId.(string))
+	if errAsignar != nil {
+		return requestresponse.APIResponseDTO(false, 500, nil, errAsignar.Error())
+	}
+
+	return requestresponse.APIResponseDTO(true, 200, grupoEditado, "")
 }
