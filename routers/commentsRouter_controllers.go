@@ -27,6 +27,15 @@ func init() {
 
     beego.GlobalControllerRouter["github.com/udistrital/sga_horario_mid/controllers:ColocacionEspacioAcademicoController"] = append(beego.GlobalControllerRouter["github.com/udistrital/sga_horario_mid/controllers:ColocacionEspacioAcademicoController"],
         beego.ControllerComments{
+            Method: "PostCopiarColocacionesAGrupoEstudio",
+            Router: "/copiar",
+            AllowHTTPMethods: []string{"post"},
+            MethodParams: param.Make(),
+            Filters: nil,
+            Params: nil})
+
+    beego.GlobalControllerRouter["github.com/udistrital/sga_horario_mid/controllers:ColocacionEspacioAcademicoController"] = append(beego.GlobalControllerRouter["github.com/udistrital/sga_horario_mid/controllers:ColocacionEspacioAcademicoController"],
+        beego.ControllerComments{
             Method: "GetSobreposicionEspacioFisico",
             Router: "/espacio-fisico/sobreposicion",
             AllowHTTPMethods: []string{"get"},

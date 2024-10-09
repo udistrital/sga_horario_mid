@@ -19,6 +19,7 @@ func (c *ColocacionEspacioAcademicoController) URLMapping() {
 	c.Mapping("GetColocacionesGrupoSinDetalles", c.GetColocacionesGrupoSinDetalles)
 	c.Mapping("GetSobreposicionEnGrupoEstudio", c.GetSobreposicionEnGrupoEstudio)
 	c.Mapping("GetSobreposicionEspacioFisico", c.GetSobreposicionEspacioFisico)
+	c.Mapping("PostCopiarColocacionesAGrupoEstudio", c.PostCopiarColocacionesAGrupoEstudio)
 }
 
 // @Title GetColocacionesDeGrupoEstudio
@@ -149,22 +150,22 @@ func (c *ColocacionEspacioAcademicoController) GetSobreposicionEspacioFisico() {
 	c.ServeJSON()
 }
 
-// // @Title PostCopiarColocaciones
-// // @Description copia las colocaciones de un un grupo de estudio a otro
-// // @Param   body        body    {}  true		"body"
-// // @Success 200 {}
-// // @Failure 400 the request contains incorrect syntax
-// // @router /copiar [post]
-// func (c *ColocacionEspacioAcademicoController) PostCopiarColocaciones() {
+// @Title PostCopiarColocacionesAGrupoEstudio
+// @Description copia las colocaciones de un un grupo de estudio a otro
+// @Param   body        body    {}  true		"body"
+// @Success 200 {}
+// @Failure 400 the request contains incorrect syntax
+// @router /copiar [post]
+func (c *ColocacionEspacioAcademicoController) PostCopiarColocacionesAGrupoEstudio() {
 
-// 	defer errorhandler.HandlePanic(&c.Controller)
+	defer errorhandler.HandlePanic(&c.Controller)
 
-// 	infoParaCopiado := c.Ctx.Input.RequestBody
+	infoParaCopiado := c.Ctx.Input.RequestBody
 
-// 	respuesta := services.CreateHorarioCopia(infoParaCopiado)
+	respuesta := services.CopiarColocacionesAGrupoEstudio(infoParaCopiado)
 
-// 	c.Ctx.Output.SetStatus(respuesta.Status)
+	c.Ctx.Output.SetStatus(respuesta.Status)
 
-// 	c.Data["json"] = respuesta
-// 	c.ServeJSON()
-// }
+	c.Data["json"] = respuesta
+	c.ServeJSON()
+}

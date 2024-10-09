@@ -154,3 +154,40 @@ func GetSobreposicionEnGrupoEstudio(grupoEstudioId, periodoId, colocacionId stri
 
 	return requestresponse.APIResponseDTO(true, 200, colocacionSobrepuesta, "")
 }
+
+func CopiarColocacionesAGrupoEstudio(infoParaCopiado []byte) requestresponse.APIResponse {
+	var infoParaCopiadoMap map[string]interface{}
+	_ = json.Unmarshal(infoParaCopiado, &infoParaCopiadoMap)
+	grupoEstudioId := infoParaCopiadoMap["grupoEstudioId"]
+	periodoId := infoParaCopiadoMap["periodoId"]
+	colocaciones := infoParaCopiadoMap["colocaciones"].([]interface{})
+
+	var colocacionesPost []map[string]interface{}
+	for _, colocacion := range colocaciones {
+		colocacionMap := colocacion.(map[string]interface{})
+		urlColocacion := beego.AppConfig.String("HorarioService") + "colocacion-espacio-academico/" + colocacionMap["colocacionId"].(string)
+		var colocacion map[string]interface{}
+		if err := request.GetJson(urlColocacion, &colocacion); err != nil {
+			return requestresponse.APIResponseDTO(true, 200, nil, "Error en el servicio horario"+err.Error())
+		}
+		colocacion = colocacion["Data"].(map[string]interface{})
+		delete(colocacion, "_id")
+		colocacion["GrupoEstudioId"] = grupoEstudioId
+		colocacion["PeriodoId"] = periodoId
+		colocacion["EspacioAcademicoId"] = colocacionMap["espacioAcademicoId"]
+
+		urlColocacionPost := beego.AppConfig.String("HorarioService") + "colocacion-espacio-academico"
+		var colocacionPost map[string]interface{}
+		if err := request.SendJson(urlColocacionPost, "POST", &colocacionPost, colocacion); err != nil {
+			return requestresponse.APIResponseDTO(false, 500, nil, "Error en el servicio de horario", err.Error())
+		}
+		colocacionesPost = append(colocacionesPost, colocacionPost["Data"].(map[string]interface{}))
+	}
+
+	horarioCopiado := map[string]interface{}{
+		"grupoEstudioId": grupoEstudioId,
+		"colocaciones":   colocacionesPost,
+	}
+
+	return requestresponse.APIResponseDTO(true, 200, horarioCopiado, "")
+}
