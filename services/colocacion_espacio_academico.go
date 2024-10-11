@@ -3,7 +3,6 @@ package services
 import (
 	"encoding/json"
 	"fmt"
-	"sync"
 
 	"github.com/astaxie/beego"
 	"github.com/udistrital/sga_horario_mid/helpers"
@@ -51,35 +50,12 @@ func GetSobreposicionEspacioFisico(colocacionId, periodoId string) requestrespon
 }
 
 func GetColocacionesDeGrupoEstudio(grupoEstudioId, periodoId string) requestresponse.APIResponse {
-	colocacionesTotales, err := helpers.GetColocacionesDeGrupoEstudio(grupoEstudioId, periodoId)
-	if err != nil {
-		return requestresponse.APIResponseDTO(false, 500, nil, fmt.Sprintf("error en metodo GetColocacionesSegunGrupoEstudioYPeriodo: %v", err), err)
+	colocaciones, errPlan := helpers.GetColocacionesConDetallesDeGrupoEstudio(grupoEstudioId, periodoId)
+	if errPlan != nil {
+		return requestresponse.APIResponseDTO(false, 500, nil, fmt.Sprintf("error en metodo GetColocacionesConDetallesDeGrupoEstudio: %v", errPlan))
 	}
 
-	var wg sync.WaitGroup
-	errChan := make(chan error, len(colocacionesTotales))
-
-	for _, colocacion := range colocacionesTotales {
-		wg.Add(1)
-		go func(colocacion map[string]interface{}) {
-			defer wg.Done()
-			_, err := helpers.AgregarInfoAdicionalColocacion(colocacion)
-			if err != nil {
-				errChan <- err
-			}
-		}(colocacion.(map[string]interface{}))
-	}
-
-	wg.Wait()
-	close(errChan)
-
-	for err := range errChan {
-		if err != nil {
-			return requestresponse.APIResponseDTO(false, 500, nil, fmt.Sprintf("error en metodo AgregarInfoAdicionalColocacion: %v", err))
-		}
-	}
-
-	return requestresponse.APIResponseDTO(true, 200, colocacionesTotales, "")
+	return requestresponse.APIResponseDTO(true, 200, colocaciones, "")
 }
 
 func GetColocacionInfoAdicional(colocacionId string) requestresponse.APIResponse {
@@ -190,4 +166,44 @@ func CopiarColocacionesAGrupoEstudio(infoParaCopiado []byte) requestresponse.API
 	}
 
 	return requestresponse.APIResponseDTO(true, 200, horarioCopiado, "")
+}
+
+func GetColocacionesDeHorario(horarioId, periodoId string) requestresponse.APIResponse {
+	urlGruposEstudio := beego.AppConfig.String("HorarioService") + "grupo-estudio?query=HorarioId:" + horarioId + ",Activo:true"
+	var gruposEstudio map[string]interface{}
+	if err := request.GetJson(urlGruposEstudio, &gruposEstudio); err != nil {
+		return requestresponse.APIResponseDTO(false, 500, nil, fmt.Sprintf("error en el servicio horario: %v", err), err)
+	}
+
+	var colocacionesTotales []interface{}
+	for _, grupoEstudio := range gruposEstudio["Data"].([]interface{}) {
+		grupoEstudioId := grupoEstudio.(map[string]interface{})["_id"]
+		colocaciones, errPlan := helpers.GetColocacionesConDetallesDeGrupoEstudio(grupoEstudioId.(string), periodoId)
+		if errPlan != nil {
+			return requestresponse.APIResponseDTO(false, 500, nil, fmt.Sprintf("error en metodo GetColocacionesConDetallesDeGrupoEstudio: %v", errPlan))
+		}
+		colocacionesTotales = append(colocacionesTotales, colocaciones...)
+	}
+
+	return requestresponse.APIResponseDTO(true, 200, colocacionesTotales, "")
+}
+
+func GetColocacionesDeHorarioYsemestre(horarioId, semestreId, periodoId string) requestresponse.APIResponse {
+	urlGruposEstudio := beego.AppConfig.String("HorarioService") + "grupo-estudio?query=HorarioId:" + horarioId + ",SemestreId:" + semestreId + ",Activo:true"
+	var gruposEstudio map[string]interface{}
+	if err := request.GetJson(urlGruposEstudio, &gruposEstudio); err != nil {
+		return requestresponse.APIResponseDTO(false, 500, nil, fmt.Sprintf("error en el servicio horario: %v", err), err)
+	}
+
+	var colocacionesTotales []interface{}
+	for _, grupoEstudio := range gruposEstudio["Data"].([]interface{}) {
+		grupoEstudioId := grupoEstudio.(map[string]interface{})["_id"]
+		colocaciones, errPlan := helpers.GetColocacionesConDetallesDeGrupoEstudio(grupoEstudioId.(string), periodoId)
+		if errPlan != nil {
+			return requestresponse.APIResponseDTO(false, 500, nil, fmt.Sprintf("error en metodo GetColocacionesConDetallesDeGrupoEstudio: %v", errPlan))
+		}
+		colocacionesTotales = append(colocacionesTotales, colocaciones...)
+	}
+
+	return requestresponse.APIResponseDTO(true, 200, colocacionesTotales, "")
 }

@@ -322,3 +322,38 @@ func VerificarSobreposicionEnColocaciones(colocacion map[string]interface{}, col
 
 	return colocacionSobrepuesta, nil
 }
+
+// GetColocacionesConDetallesDeGrupoEstudio
+//
+// Obtiene la colocaciones con info adicional de las colocaciones de un grupo de estudio
+func GetColocacionesConDetallesDeGrupoEstudio(grupoEstudioId, periodoId string) ([]interface{}, error) {
+	colocacionesTotales, err := GetColocacionesDeGrupoEstudio(grupoEstudioId, periodoId)
+	if err != nil {
+		return nil, fmt.Errorf("error en metodo GetColocacionesSegunGrupoEstudioYPeriodo: %v", err)
+	}
+
+	var wg sync.WaitGroup
+	errChan := make(chan error, len(colocacionesTotales))
+
+	for _, colocacion := range colocacionesTotales {
+		wg.Add(1)
+		go func(colocacion map[string]interface{}) {
+			defer wg.Done()
+			_, err := AgregarInfoAdicionalColocacion(colocacion)
+			if err != nil {
+				errChan <- err
+			}
+		}(colocacion.(map[string]interface{}))
+	}
+
+	wg.Wait()
+	close(errChan)
+
+	for err := range errChan {
+		if err != nil {
+			return nil, fmt.Errorf("error en metodo AgregarInfoAdicionalColocacion: %v", err)
+		}
+	}
+
+	return colocacionesTotales, nil
+}

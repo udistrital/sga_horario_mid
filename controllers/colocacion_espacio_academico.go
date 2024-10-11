@@ -1,9 +1,12 @@
 package controllers
 
 import (
+	"fmt"
+
 	"github.com/astaxie/beego"
 	"github.com/udistrital/sga_horario_mid/services"
 	"github.com/udistrital/utils_oas/errorhandler"
+	"github.com/udistrital/utils_oas/requestresponse"
 )
 
 // Operations about GruposEstudio
@@ -13,7 +16,7 @@ type ColocacionEspacioAcademicoController struct {
 
 // URLMapping ...
 func (c *ColocacionEspacioAcademicoController) URLMapping() {
-	c.Mapping("GetColocacionesDeGrupoEstudio", c.GetColocacionesDeGrupoEstudio)
+	c.Mapping("GetColocacionesSegunParametros", c.GetColocacionesSegunParametros)
 	c.Mapping("GetColocacionInfoAdicional", c.GetColocacionInfoAdicional)
 	c.Mapping("DeleteColocacionEspacioAcademico", c.DeleteColocacionEspacioAcademico)
 	c.Mapping("GetColocacionesGrupoSinDetalles", c.GetColocacionesGrupoSinDetalles)
@@ -22,25 +25,41 @@ func (c *ColocacionEspacioAcademicoController) URLMapping() {
 	c.Mapping("PostCopiarColocacionesAGrupoEstudio", c.PostCopiarColocacionesAGrupoEstudio)
 }
 
-// @Title GetColocacionesDeGrupoEstudio
-// @Description get colocaciones de espacios academicos segun id de grupo estudio y id del periodo
-// @Param	grupo-estudio-id	query	string	false	"Se recibe parametro: id del grupo estudio"
-// @Param	periodo-id	query	string	false	"Se recibe parametro: id del periodo"
+// @Title GetColocacionesSegunParametros
+// @Description get colocaciones dependiendo de los parametros
+// @Param	horario-id			query	string	false	"id del horario"
+// @Param	semestre-id			query	string	false	"id del semestre"
+// @Param	grupo-estudio-id	query	string	false	"id del grupo estudio"
+// @Param	periodo-id			query	string	false	"id del periodo"
 // @Success 200 {}
 // @Failure 403 body is empty
 // @router / [get]
-func (c *ColocacionEspacioAcademicoController) GetColocacionesDeGrupoEstudio() {
+func (c *ColocacionEspacioAcademicoController) GetColocacionesSegunParametros() {
 	defer errorhandler.HandlePanic(&c.Controller)
 
+	horarioId := c.GetString("horario-id")
 	grupoEstudioId := c.GetString("grupo-estudio-id")
+	semestreId := c.GetString("semestre-id")
 	periodoId := c.GetString("periodo-id")
 
-	respuesta := services.GetColocacionesDeGrupoEstudio(grupoEstudioId, periodoId)
+	fmt.Println(horarioId)
+	var respuesta requestresponse.APIResponse
+
+	switch {
+	case horarioId != "" && semestreId != "":
+		respuesta = services.GetColocacionesDeHorarioYsemestre(horarioId, semestreId, periodoId)
+	case horarioId != "":
+		respuesta = services.GetColocacionesDeHorario(horarioId, periodoId)
+	case grupoEstudioId != "":
+		respuesta = services.GetColocacionesDeGrupoEstudio(grupoEstudioId, periodoId)
+	default:
+		respuesta.Success = false
+		respuesta.Message = "se requiere 'horario-id', 'grupo-estudio-id' o 'semestre-id'"
+		respuesta.Status = 400
+	}
 
 	c.Ctx.Output.SetStatus(respuesta.Status)
-
 	c.Data["json"] = respuesta
-
 	c.ServeJSON()
 }
 
@@ -58,9 +77,7 @@ func (c *ColocacionEspacioAcademicoController) GetColocacionInfoAdicional() {
 	respuesta := services.GetColocacionInfoAdicional(colocacionId)
 
 	c.Ctx.Output.SetStatus(respuesta.Status)
-
 	c.Data["json"] = respuesta
-
 	c.ServeJSON()
 }
 
@@ -83,9 +100,9 @@ func (c *ColocacionEspacioAcademicoController) DeleteColocacionEspacioAcademico(
 }
 
 // @Title GetColocacionesSinInfoAdicionalDeGrupoEstudio
-// @Description get colocaciones de espacios academicos segun id de grupo estudio y id del periodo
-// @Param	grupo-estudio-id	query	string	false	"Se recibe parametro: id del grupo estudio"
-// @Param	periodo-id	query	string	false	"Se recibe parametro: id del periodo"
+// @Description get colocaciones de espacios academicos segun id de grupo estudio yid del periodo
+// @Param	grupo-estudio-id	query	string	false	"id del grupo estudio"
+// @Param	periodo-id	query	string	false	"id del periodo"
 // @Success 200 {}
 // @Failure 403 body is empty
 // @router /sin-detalles [get]
@@ -98,17 +115,15 @@ func (c *ColocacionEspacioAcademicoController) GetColocacionesGrupoSinDetalles()
 	respuesta := services.GetColocacionesGrupoSinDetalles(grupoEstudioId, periodoId)
 
 	c.Ctx.Output.SetStatus(respuesta.Status)
-
 	c.Data["json"] = respuesta
-
 	c.ServeJSON()
 }
 
 // @Title GetSobreposicionEnGrupoEstudio
 // @Description Obtiene si una colocación se sobrepone a alguna colocación del grupo de estudio
-// @Param	grupo-estudio-id	query	string	false	"Se recibe parametro: id del grupo de estudio"
-// @Param	periodo-id			query	string	false	"Se recibe parametro: id del periodo del grupo de estudio"
-// @Param	colocacion-id		query	string	false	"Se recibe parametro: id de la colocacion"
+// @Param	grupo-estudio-id	query	string	false	"id del grupo de estudio"
+// @Param	periodo-id			query	string	false	"id del periodo del grupo de estudio"
+// @Param	colocacion-id		query	string	false	" id de la colocacion"
 // @Success 200 {}
 // @Failure 403 body is empty
 // @router /grupo-estudio/sobreposicion [get]
@@ -122,16 +137,14 @@ func (c *ColocacionEspacioAcademicoController) GetSobreposicionEnGrupoEstudio() 
 	respuesta := services.GetSobreposicionEnGrupoEstudio(grupoEstudioId, periodoId, colocacionId)
 
 	c.Ctx.Output.SetStatus(respuesta.Status)
-
 	c.Data["json"] = respuesta
-
 	c.ServeJSON()
 }
 
 // @Title GetSobreposicionEspacioFisico
 // @Description get si hay una colocacion puesta en donde se quiere poner otra segun el espacio fisico
-// @Param	colocacion-id	query	string	false	"Se recibe parametro: id de la colocacion"
-// @Param	periodo-id	query	string	false	"Se recibe parametro: id del periodo"
+// @Param	colocacion-id	query	string	false	" id de la colocacion"
+// @Param	periodo-id	query	string	false	"id del periodo"
 // @Success 200 {}
 // @Failure 403 body is empty
 // @router /espacio-fisico/sobreposicion [get]
@@ -144,9 +157,7 @@ func (c *ColocacionEspacioAcademicoController) GetSobreposicionEspacioFisico() {
 	respuesta := services.GetSobreposicionEspacioFisico(colocacionId, periodoId)
 
 	c.Ctx.Output.SetStatus(respuesta.Status)
-
 	c.Data["json"] = respuesta
-
 	c.ServeJSON()
 }
 
@@ -165,7 +176,6 @@ func (c *ColocacionEspacioAcademicoController) PostCopiarColocacionesAGrupoEstud
 	respuesta := services.CopiarColocacionesAGrupoEstudio(infoParaCopiado)
 
 	c.Ctx.Output.SetStatus(respuesta.Status)
-
 	c.Data["json"] = respuesta
 	c.ServeJSON()
 }
