@@ -20,19 +20,127 @@
                 "tags": [
                     "colocacion-espacio-academico"
                 ],
-                "description": "get colocaciones de espacios academicos segun id de grupo estudio y id del periodo",
-                "operationId": "ColocacionEspacioAcademicoController.GetColocacionesDeGrupoEstudio",
+                "description": "get colocaciones dependiendo de los parametros",
+                "operationId": "ColocacionEspacioAcademicoController.GetColocacionesSegunParametros",
                 "parameters": [
                     {
                         "in": "query",
+                        "name": "horario-id",
+                        "description": "id del horario",
+                        "type": "string"
+                    },
+                    {
+                        "in": "query",
+                        "name": "semestre-id",
+                        "description": "id del semestre",
+                        "type": "string"
+                    },
+                    {
+                        "in": "query",
                         "name": "grupo-estudio-id",
-                        "description": "Se recibe parametro: id del grupo estudio",
+                        "description": "id del grupo estudio",
                         "type": "string"
                     },
                     {
                         "in": "query",
                         "name": "periodo-id",
-                        "description": "Se recibe parametro: id del periodo",
+                        "description": "id del periodo",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{}"
+                    },
+                    "403": {
+                        "description": "body is empty"
+                    }
+                }
+            }
+        },
+        "/colocacion-espacio-academico/copiar": {
+            "post": {
+                "tags": [
+                    "colocacion-espacio-academico"
+                ],
+                "description": "copia las colocaciones de un un grupo de estudio a otro",
+                "operationId": "ColocacionEspacioAcademicoController.PostCopiarColocacionesAGrupoEstudio",
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/{}"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{}"
+                    },
+                    "400": {
+                        "description": "the request contains incorrect syntax"
+                    }
+                }
+            }
+        },
+        "/colocacion-espacio-academico/espacio-fisico/sobreposicion": {
+            "get": {
+                "tags": [
+                    "colocacion-espacio-academico"
+                ],
+                "description": "get si hay una colocacion puesta en donde se quiere poner otra segun el espacio fisico",
+                "operationId": "ColocacionEspacioAcademicoController.GetSobreposicionEspacioFisico",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "colocacion-id",
+                        "description": "id de la colocacion",
+                        "type": "string"
+                    },
+                    {
+                        "in": "query",
+                        "name": "periodo-id",
+                        "description": "id del periodo",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{}"
+                    },
+                    "403": {
+                        "description": "body is empty"
+                    }
+                }
+            }
+        },
+        "/colocacion-espacio-academico/grupo-estudio/sobreposicion": {
+            "get": {
+                "tags": [
+                    "colocacion-espacio-academico"
+                ],
+                "description": "Obtiene si una colocación se sobrepone a alguna colocación del grupo de estudio",
+                "operationId": "ColocacionEspacioAcademicoController.GetSobreposicionEnGrupoEstudio",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "grupo-estudio-id",
+                        "description": "id del grupo de estudio",
+                        "type": "string"
+                    },
+                    {
+                        "in": "query",
+                        "name": "periodo-id",
+                        "description": "id del periodo del grupo de estudio",
+                        "type": "string"
+                    },
+                    {
+                        "in": "query",
+                        "name": "colocacion-id",
+                        "description": "id de la colocacion",
                         "type": "string"
                     }
                 ],
@@ -77,50 +185,19 @@
                 "tags": [
                     "colocacion-espacio-academico"
                 ],
-                "description": "get colocaciones de espacios academicos segun id de grupo estudio y id del periodo",
+                "description": "get colocaciones de espacios academicos segun id de grupo estudio yid del periodo",
                 "operationId": "ColocacionEspacioAcademicoController.GetColocacionesSinInfoAdicionalDeGrupoEstudio",
                 "parameters": [
                     {
                         "in": "query",
                         "name": "grupo-estudio-id",
-                        "description": "Se recibe parametro: id del grupo estudio",
+                        "description": "id del grupo estudio",
                         "type": "string"
                     },
                     {
                         "in": "query",
                         "name": "periodo-id",
-                        "description": "Se recibe parametro: id del periodo",
-                        "type": "string"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "{}"
-                    },
-                    "403": {
-                        "description": "body is empty"
-                    }
-                }
-            }
-        },
-        "/colocacion-espacio-academico/sobreposicion": {
-            "get": {
-                "tags": [
-                    "colocacion-espacio-academico"
-                ],
-                "description": "get si hay una colocacion puesta en donde se quiere poner otra",
-                "operationId": "ColocacionEspacioAcademicoController.GetSobreposicionColocacion",
-                "parameters": [
-                    {
-                        "in": "query",
-                        "name": "colocacion-id",
-                        "description": "Se recibe parametro: id de la colocacion",
-                        "type": "string"
-                    },
-                    {
-                        "in": "query",
-                        "name": "periodo-id",
-                        "description": "Se recibe parametro: id del periodo",
+                        "description": "id del periodo",
                         "type": "string"
                     }
                 ],
@@ -156,62 +233,6 @@
                     },
                     "404": {
                         "description": "not found resource"
-                    }
-                }
-            }
-        },
-        "/docente/pre-asignacion": {
-            "get": {
-                "tags": [
-                    "docente"
-                ],
-                "description": "get preasignaciones de docente segun el periodo",
-                "operationId": "DocenteController.getPreasignacionesSegunDocenteYPeriodo",
-                "parameters": [
-                    {
-                        "in": "query",
-                        "name": "docente-id",
-                        "description": "Se recibe parametro: id del docente",
-                        "type": "string"
-                    },
-                    {
-                        "in": "query",
-                        "name": "periodo-id",
-                        "description": "Se recibe parametro: ide del periodo",
-                        "type": "string"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "{}"
-                    },
-                    "403": {
-                        "description": "body is empty"
-                    }
-                }
-            }
-        },
-        "/docente/vinculaciones": {
-            "get": {
-                "tags": [
-                    "docente"
-                ],
-                "description": "get docente y sus vinculaciones por documento",
-                "operationId": "DocenteController.GetDocenteYVincuaciones",
-                "parameters": [
-                    {
-                        "in": "query",
-                        "name": "documento",
-                        "description": "Se recibe parametro: documento del docente",
-                        "type": "string"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "{}"
-                    },
-                    "403": {
-                        "description": "body is empty"
                     }
                 }
             }
@@ -285,6 +306,34 @@
                 ],
                 "description": "create grupo de estudio",
                 "operationId": "GrupoEstudioController.PostGrupoEstudio",
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/{}"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{}"
+                    },
+                    "400": {
+                        "description": "the request contains incorrect syntax"
+                    }
+                }
+            }
+        },
+        "/grupo-estudio/espacio-academico": {
+            "post": {
+                "tags": [
+                    "grupo-estudio"
+                ],
+                "description": "create espacio academico modificando el grupo de estudio",
+                "operationId": "GrupoEstudioController.PostEspacioAcademico",
                 "parameters": [
                     {
                         "in": "body",
@@ -416,10 +465,6 @@
         },
         {
             "name": "espacio-fisico",
-            "description": "Operations about GruposEstudio\n"
-        },
-        {
-            "name": "docente",
             "description": "Operations about GruposEstudio\n"
         },
         {
