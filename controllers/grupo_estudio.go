@@ -17,6 +17,7 @@ func (c *GrupoEstudioController) URLMapping() {
 	c.Mapping("DeleteGrupoEstudio", c.DeleteGrupoEstudio)
 	c.Mapping("PostGrupoEstudio", c.PostGrupoEstudio)
 	c.Mapping("PutGrupoEstudio", c.PutGrupoEstudio)
+	c.Mapping("PostEspacioAcademico", c.PostEspacioAcademico)
 }
 
 // @Title getGrupoEstudioSegunHorarioYSemestre
@@ -94,6 +95,26 @@ func (c *GrupoEstudioController) PutGrupoEstudio() {
 	grupoEstudioId := c.Ctx.Input.Param(":id")
 
 	respuesta := services.UpdateGrupoEstudio(grupoEstudioId, grupoEstudio)
+
+	c.Ctx.Output.SetStatus(respuesta.Status)
+
+	c.Data["json"] = respuesta
+	c.ServeJSON()
+}
+
+// @Title PostEspacioAcademico
+// @Description create espacio academico modificando el grupo de estudio
+// @Param   body        body    {}  true		"body"
+// @Success 200 {}
+// @Failure 400 the request contains incorrect syntax
+// @router /espacio-academico [post]
+func (c *GrupoEstudioController) PostEspacioAcademico() {
+
+	defer errorhandler.HandlePanic(&c.Controller)
+
+	espacioAcademico := c.Ctx.Input.RequestBody
+
+	respuesta := services.CreateEspacioAcademico(espacioAcademico)
 
 	c.Ctx.Output.SetStatus(respuesta.Status)
 

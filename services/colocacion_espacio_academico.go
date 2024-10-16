@@ -3,7 +3,6 @@ package services
 import (
 	"encoding/json"
 	"fmt"
-	"sync"
 
 	"github.com/astaxie/beego"
 	"github.com/udistrital/sga_horario_mid/helpers"
@@ -11,9 +10,9 @@ import (
 	"github.com/udistrital/utils_oas/requestresponse"
 )
 
-// GetSobreposicionColocacion verifica si una colocación sobrepone a cualquier otra existente
+// GetSobreposicionEspacioFisico verifica si una colocación sobrepone a cualquier otra existente
 // con respecto al espacio fisico durante un período determinado.
-func GetSobreposicionColocacion(colocacionId, periodoId string) requestresponse.APIResponse {
+func GetSobreposicionEspacioFisico(colocacionId, periodoId string) requestresponse.APIResponse {
 	urlColocacion := beego.AppConfig.String("HorarioService") + "colocacion-espacio-academico/" + colocacionId
 	var colocacionEspacioAcademico map[string]interface{}
 	if err := request.GetJson(urlColocacion, &colocacionEspacioAcademico); err != nil {
@@ -37,6 +36,7 @@ func GetSobreposicionColocacion(colocacionId, periodoId string) requestresponse.
 			}
 
 			espacioOcupado = espacioOcupado["Data"].(map[string]interface{})
+			_ = helpers.GetSedeEdificioSalon(espacioOcupado)
 
 			colocacionSobrepuesta = map[string]interface{}{
 				"sobrepuesta":         true,
@@ -50,35 +50,12 @@ func GetSobreposicionColocacion(colocacionId, periodoId string) requestresponse.
 }
 
 func GetColocacionesDeGrupoEstudio(grupoEstudioId, periodoId string) requestresponse.APIResponse {
-	colocacionesTotales, err := helpers.GetColocacionesDeGrupoEstudio(grupoEstudioId, periodoId)
-	if err != nil {
-		return requestresponse.APIResponseDTO(false, 500, nil, fmt.Sprintf("error en metodo GetColocacionesSegunGrupoEstudioYPeriodo: %v", err), err)
+	colocaciones, errPlan := helpers.GetColocacionesConDetallesDeGrupoEstudio(grupoEstudioId, periodoId)
+	if errPlan != nil {
+		return requestresponse.APIResponseDTO(false, 500, nil, fmt.Sprintf("error en metodo GetColocacionesConDetallesDeGrupoEstudio: %v", errPlan))
 	}
 
-	var wg sync.WaitGroup
-	errChan := make(chan error, len(colocacionesTotales))
-
-	for _, colocacion := range colocacionesTotales {
-		wg.Add(1)
-		go func(colocacion map[string]interface{}) {
-			defer wg.Done()
-			_, err := helpers.AgregarInfoAdicionalColocacion(colocacion)
-			if err != nil {
-				errChan <- err
-			}
-		}(colocacion.(map[string]interface{}))
-	}
-
-	wg.Wait()
-	close(errChan)
-
-	for err := range errChan {
-		if err != nil {
-			return requestresponse.APIResponseDTO(false, 500, nil, fmt.Sprintf("error en metodo AgregarInfoAdicionalColocacion: %v", err))
-		}
-	}
-
-	return requestresponse.APIResponseDTO(true, 200, colocacionesTotales, "")
+	return requestresponse.APIResponseDTO(true, 200, colocaciones, "")
 }
 
 func GetColocacionInfoAdicional(colocacionId string) requestresponse.APIResponse {
@@ -113,7 +90,7 @@ func DeleteColocacionEspacioAcademico(colocacionId string) requestresponse.APIRe
 func GetColocacionesGrupoSinDetalles(grupoEstudioId, periodoId string) requestresponse.APIResponse {
 	colocaciones, err := helpers.GetColocacionesDeGrupoEstudio(grupoEstudioId, periodoId)
 	if err != nil {
-		return requestresponse.APIResponseDTO(false, 500, nil, fmt.Sprintf("error en metodo GetColocacionesSegunGrupoEstudioYPeriodo: %v", err), err)
+		return requestresponse.APIResponseDTO(false, 500, nil, fmt.Sprintf("error en metodo GetColocacionesDeGrupoEstudio: %v", err), err)
 	}
 
 	var colocacionesSinDetalles []map[string]interface{}
@@ -131,4 +108,102 @@ func GetColocacionesGrupoSinDetalles(grupoEstudioId, periodoId string) requestre
 		})
 	}
 	return requestresponse.APIResponseDTO(true, 200, colocacionesSinDetalles, "")
+}
+
+// Obtiene si una colocación se sobrepone a alguna colocación del grupo de estudio
+func GetSobreposicionEnGrupoEstudio(grupoEstudioId, periodoId, colocacionId string) requestresponse.APIResponse {
+	colocacionesGrupoEstudio, err := helpers.GetColocacionesDeGrupoEstudio(grupoEstudioId, periodoId)
+	if err != nil {
+		return requestresponse.APIResponseDTO(false, 500, nil, fmt.Sprintf("error en metodo GetColocacionesDeGrupoEstudio: %v", err), err)
+	}
+
+	urlColocacion := beego.AppConfig.String("HorarioService") + "colocacion-espacio-academico/" + colocacionId
+	var colocacionEspacioAcademico map[string]interface{}
+	if err := request.GetJson(urlColocacion, &colocacionEspacioAcademico); err != nil {
+		return requestresponse.APIResponseDTO(false, 500, nil, fmt.Sprintf("error en el servicio horario: %v", err), err)
+	}
+
+	colocacionSobrepuesta, err := helpers.VerificarSobreposicionEnColocaciones(colocacionEspacioAcademico["Data"].(map[string]interface{}), colocacionesGrupoEstudio)
+	if err != nil {
+		return requestresponse.APIResponseDTO(false, 500, nil, fmt.Sprintf("error en VerificarSobreposicion: %v", err), err)
+	}
+
+	return requestresponse.APIResponseDTO(true, 200, colocacionSobrepuesta, "")
+}
+
+func CopiarColocacionesAGrupoEstudio(infoParaCopiado []byte) requestresponse.APIResponse {
+	var infoParaCopiadoMap map[string]interface{}
+	_ = json.Unmarshal(infoParaCopiado, &infoParaCopiadoMap)
+	grupoEstudioId := infoParaCopiadoMap["grupoEstudioId"]
+	periodoId := infoParaCopiadoMap["periodoId"]
+	colocaciones := infoParaCopiadoMap["colocaciones"].([]interface{})
+
+	var colocacionesPost []map[string]interface{}
+	for _, colocacion := range colocaciones {
+		colocacionMap := colocacion.(map[string]interface{})
+		urlColocacion := beego.AppConfig.String("HorarioService") + "colocacion-espacio-academico/" + colocacionMap["colocacionId"].(string)
+		var colocacion map[string]interface{}
+		if err := request.GetJson(urlColocacion, &colocacion); err != nil {
+			return requestresponse.APIResponseDTO(true, 200, nil, "Error en el servicio horario"+err.Error())
+		}
+		colocacion = colocacion["Data"].(map[string]interface{})
+		delete(colocacion, "_id")
+		colocacion["GrupoEstudioId"] = grupoEstudioId
+		colocacion["PeriodoId"] = periodoId
+		colocacion["EspacioAcademicoId"] = colocacionMap["espacioAcademicoId"]
+
+		urlColocacionPost := beego.AppConfig.String("HorarioService") + "colocacion-espacio-academico"
+		var colocacionPost map[string]interface{}
+		if err := request.SendJson(urlColocacionPost, "POST", &colocacionPost, colocacion); err != nil {
+			return requestresponse.APIResponseDTO(false, 500, nil, "Error en el servicio de horario", err.Error())
+		}
+		colocacionesPost = append(colocacionesPost, colocacionPost["Data"].(map[string]interface{}))
+	}
+
+	horarioCopiado := map[string]interface{}{
+		"grupoEstudioId": grupoEstudioId,
+		"colocaciones":   colocacionesPost,
+	}
+
+	return requestresponse.APIResponseDTO(true, 200, horarioCopiado, "")
+}
+
+func GetColocacionesDeHorario(horarioId, periodoId string) requestresponse.APIResponse {
+	urlGruposEstudio := beego.AppConfig.String("HorarioService") + "grupo-estudio?query=HorarioId:" + horarioId + ",Activo:true"
+	var gruposEstudio map[string]interface{}
+	if err := request.GetJson(urlGruposEstudio, &gruposEstudio); err != nil {
+		return requestresponse.APIResponseDTO(false, 500, nil, fmt.Sprintf("error en el servicio horario: %v", err), err)
+	}
+
+	var colocacionesTotales []interface{}
+	for _, grupoEstudio := range gruposEstudio["Data"].([]interface{}) {
+		grupoEstudioId := grupoEstudio.(map[string]interface{})["_id"]
+		colocaciones, errPlan := helpers.GetColocacionesConDetallesDeGrupoEstudio(grupoEstudioId.(string), periodoId)
+		if errPlan != nil {
+			return requestresponse.APIResponseDTO(false, 500, nil, fmt.Sprintf("error en metodo GetColocacionesConDetallesDeGrupoEstudio: %v", errPlan))
+		}
+		colocacionesTotales = append(colocacionesTotales, colocaciones...)
+	}
+
+	return requestresponse.APIResponseDTO(true, 200, colocacionesTotales, "")
+}
+
+func GetColocacionesDeHorarioYsemestre(horarioId, semestreId, periodoId string) requestresponse.APIResponse {
+	urlGruposEstudio := beego.AppConfig.String("HorarioService") + "grupo-estudio?query=HorarioId:" + horarioId + ",SemestreId:" + semestreId + ",Activo:true"
+	var gruposEstudio map[string]interface{}
+	if err := request.GetJson(urlGruposEstudio, &gruposEstudio); err != nil {
+		return requestresponse.APIResponseDTO(false, 500, nil, fmt.Sprintf("error en el servicio horario: %v", err), err)
+	}
+
+	var colocacionesTotales []interface{}
+	for _, grupoEstudio := range gruposEstudio["Data"].([]interface{}) {
+		grupoEstudioId := grupoEstudio.(map[string]interface{})["_id"]
+		colocaciones, errPlan := helpers.GetColocacionesConDetallesDeGrupoEstudio(grupoEstudioId.(string), periodoId)
+		if errPlan != nil {
+			return requestresponse.APIResponseDTO(false, 500, nil, fmt.Sprintf("error en metodo GetColocacionesConDetallesDeGrupoEstudio: %v", errPlan))
+		}
+		colocacionesTotales = append(colocacionesTotales, colocaciones...)
+	}
+
+	return requestresponse.APIResponseDTO(true, 200, colocacionesTotales, "")
 }
